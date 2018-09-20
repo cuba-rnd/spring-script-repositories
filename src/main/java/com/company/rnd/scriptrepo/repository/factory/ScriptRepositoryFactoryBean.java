@@ -4,7 +4,6 @@ import com.company.rnd.scriptrepo.repository.ScriptMethod;
 import com.company.rnd.scriptrepo.repository.ScriptParam;
 import com.company.rnd.scriptrepo.repository.ScriptRepository;
 import com.company.rnd.scriptrepo.repository.factory.ScriptRepositoryConfigurationParser.ScriptInfo;
-import com.haulmont.cuba.core.sys.AppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -14,6 +13,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -32,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostProcessor {
+public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostProcessor, ApplicationContextAware {
 
     public static final String NAME = "scriptRepositoryFactory";
 
@@ -42,6 +43,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
     private final Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig;
 
+    private ApplicationContext ctx;
 
     public ScriptRepositoryFactoryBean(List<String> basePackages, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
         this.basePackages = basePackages;
@@ -68,9 +70,13 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
     }
 
-
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        ctx = applicationContext;
     }
 
     @SuppressWarnings({"unchecked", "unused"})
@@ -80,7 +86,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
 
         log.debug("Creating proxy for {}", repositoryClass.getName());
-        RepositoryMethodsHandler handler = new RepositoryMethodsHandler(customAnnotationsConfig);
+        RepositoryMethodsHandler handler = new RepositoryMethodsHandler(customAnnotationsConfig, ctx);
         return (T) Proxy.newProxyInstance(repositoryClass.getClassLoader(),
                 new Class<?>[]{repositoryClass}, handler);
     }
@@ -109,8 +115,11 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
         private final Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig;
 
-        RepositoryMethodsHandler(Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
+        private final ApplicationContext ctx;
+
+        RepositoryMethodsHandler(Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig, ApplicationContext ctx) {
             this.customAnnotationsConfig = customAnnotationsConfig;
+            this.ctx = ctx;
         }
 
         @Override
@@ -126,9 +135,9 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                         ScriptInfo scriptInfo = createMethodInfo(method);
                         log.trace("Script annotation class name: {}", scriptInfo.scriptAnnotation.getName());
                         log.trace("Provider bean name: {}", scriptInfo.provider);
-                        ScriptProvider provider = (ScriptProvider) AppContext.getApplicationContext().getBean(scriptInfo.provider);
+                        ScriptProvider provider = (ScriptProvider) ctx.getBean(scriptInfo.provider);
                         log.trace("Executor bean name: {}", scriptInfo.executor);
-                        ScriptExecutor executor = (ScriptExecutor) AppContext.getApplicationContext().getBean(scriptInfo.executor);
+                        ScriptExecutor executor = (ScriptExecutor) ctx.getBean(scriptInfo.executor);
                         return new MethodInvocationInfo(provider, executor);
                     });
             String[] paramNames = Arrays.stream(method.getParameters())

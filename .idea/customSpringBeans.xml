@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CustomBeanRegistry">
+    <option name="map">
+      <map>
+        <entry key="&lt;repo:script-repositories xmlns:repo=&quot;http://www.cuba-platform.org/schema/script/repositories&quot;&gt;&#10;  &lt;repo:base-packages&gt;&#10;    &lt;repo:base-package&gt;com.company.rnd.scriptrepo.core.test.database&lt;/repo:base-package&gt;&#10;    &lt;repo:base-package&gt;com.company.rnd.scriptrepo.core.test.files&lt;/repo:base-package&gt;&#10;  &lt;/repo:base-packages&gt;&#10;  &lt;repo:annotations-config&gt;&#10;    &lt;repo:annotation-mapping annotation-class=&quot;com.company.rnd.scriptrepo.core.test.database.DbGroovyScript&quot; provider-bean-name=&quot;groovyDbProvider&quot; executor-bean-name=&quot;groovyJsrExecutor&quot; /&gt;&#10;  &lt;/repo:annotations-config&gt;&#10;&lt;/repo:script-repositories&gt;">
+          <value>
+            <list>
+              <CustomBeanInfo>
+                <option name="beanName" value="scriptRepositoryFactory" />
+                <option name="beanClassName" value="com.company.rnd.scriptrepo.repository.factory.ScriptRepositoryFactoryBean" />
+                <option name="constructorArgumentCount" value="2" />
+              </CustomBeanInfo>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

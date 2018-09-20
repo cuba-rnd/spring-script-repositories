@@ -1,6 +1,4 @@
-package com.company.rnd.scriptrepo.entity;
-
-import com.haulmont.cuba.core.entity.StandardEntity;
+package com.company.rnd.scriptrepo.test.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,10 +8,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-@Table(name = "SCRIPTREPO_PERSISTENT_SCRIPT_PARAMETER")
-@Entity(name = "scriptrepo$PersistentScriptParameter")
+@Table(name = "PERSISTENT_SCRIPT_PARAMETER")
+@Entity(name = "PersistentScriptParameter")
 public class PersistentScriptParameter extends StandardEntity {
-    private static final long serialVersionUID = 6323743611817286101L;
 
     @NotNull
     @Column(name = "PARAM_ORDER", nullable = false)

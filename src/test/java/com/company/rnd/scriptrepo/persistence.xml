@@ -3,7 +3,7 @@
              version="2.0">
     <persistence-unit name="scriptrepo"
                       transaction-type="RESOURCE_LOCAL">
-        <class>com.company.rnd.scriptrepo.entity.PersistentScript</class>
-        <class>com.company.rnd.scriptrepo.entity.PersistentScriptParameter</class>
+        <class>com.company.rnd.scriptrepo.test.entity.PersistentScript</class>
+        <class>com.company.rnd.scriptrepo.test.entity.PersistentScriptParameter</class>
     </persistence-unit>
 </persistence>

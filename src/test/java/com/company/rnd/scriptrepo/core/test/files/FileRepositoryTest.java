@@ -1,15 +1,18 @@
 package com.company.rnd.scriptrepo.core.test.files;
 
-import com.company.rnd.scriptrepo.AppTestContainer;
-import com.haulmont.cuba.core.global.AppBeans;
-import org.apache.commons.lang.time.DateUtils;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.util.StatusPrinter;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -19,18 +22,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@ContextConfiguration(locations = {"classpath:test-spring.xml"})
+@RunWith(SpringJUnit4ClassRunner.class)
 public class FileRepositoryTest {
 
     private static final Logger log = LoggerFactory.getLogger(FileRepositoryTest.class);
 
-    @ClassRule
-    public static AppTestContainer cont = AppTestContainer.Common.INSTANCE;
-
+    @Autowired
     private CustomerScriptRepository repo;
 
     @Before
     public void setUp() throws Exception {
-        repo = AppBeans.get(CustomerScriptRepository.class);
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        StatusPrinter.print(lc);
     }
 
     @After
@@ -51,7 +55,7 @@ public class FileRepositoryTest {
     @Test
     public void testCreateObject() throws ParseException {
         String newName = RandomStringUtils.randomAlphabetic(8);
-        Date birthDate = DateUtils.parseDate("1988-12-14", new String[]{"yyyy-MM-dd"});
+        Date birthDate = DateUtils.parseDate("1988-12-14", "yyyy-MM-dd");
         Customer c = repo.createCustomer(newName, birthDate);
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());

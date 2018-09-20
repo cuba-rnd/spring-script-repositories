@@ -1,31 +1,35 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'application'
+apply plugin: 'java-library'
 
-mainClassName = 'hello.HelloWorld'
-
-// tag::repositories[]
 repositories { 
     mavenCentral() 
 }
-// end::repositories[]
 
-// tag::jar[]
 jar {
-    baseName = 'gs-gradle'
+    baseName = 'spring-script-repositories'
     version =  '0.1.0'
 }
-// end::jar[]
 
-// tag::dependencies[]
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile "joda-time:joda-time:2.2"
+    compile "org.codehaus.groovy:groovy-jsr223:2.5.2"
+
+    compile "ch.qos.logback:logback-classic:1.2.3"
+    compile "org.slf4j:log4j-over-slf4j:1.7.25"
+
+    compile "org.springframework:spring-core:4.3.19.RELEASE"
+    compile "org.springframework:spring-beans:4.3.19.RELEASE"
+    compile "org.springframework:spring-context-support:4.3.19.RELEASE"
+
+    testCompile "org.springframework:spring-test:4.3.19.RELEASE"
+    testCompile "javax.validation:validation-api:2.0.1.Final"
+    testCompile "org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.3"
+    testCompile "org.apache.commons:commons-lang3:3.8"
+    testCompile "org.apache.commons:commons-collections4:4.2"
+    testCompile "org.apache.commons:commons-text:1.4"
+    testCompile "commons-io:commons-io:2.6"
+    testCompile "commons-cli:commons-cli:1.4"
+    testCompile "commons-codec:commons-codec:1.11"
     testCompile "junit:junit:4.12"
 }
-// end::dependencies[]
-
-// tag::wrapper[]
-// end::wrapper[]
