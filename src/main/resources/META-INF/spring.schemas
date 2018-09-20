@@ -1,1 +1,1 @@
-http\://www.cuba-platform.org/schema/script/repositories=com/company/rnd/scriptrepo/repository/script-repositories.xsd
+http\://www.cuba-platform.org/schema/script/repositories/script-repositories.xsd=com/company/rnd/scriptrepo/repository/script-repositories.xsd

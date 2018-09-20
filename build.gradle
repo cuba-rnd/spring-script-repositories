@@ -1,6 +1,6 @@
 apply plugin: 'java-library'
 
-repositories { 
+repositories {
     mavenCentral() 
 }
 
@@ -22,14 +22,8 @@ dependencies {
     compile "org.springframework:spring-beans:4.3.19.RELEASE"
     compile "org.springframework:spring-context-support:4.3.19.RELEASE"
 
+    testCompile "org.hsqldb:hsqldb:2.4.1"
     testCompile "org.springframework:spring-test:4.3.19.RELEASE"
-    testCompile "javax.validation:validation-api:2.0.1.Final"
-    testCompile "org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.3"
     testCompile "org.apache.commons:commons-lang3:3.8"
-    testCompile "org.apache.commons:commons-collections4:4.2"
-    testCompile "org.apache.commons:commons-text:1.4"
-    testCompile "commons-io:commons-io:2.6"
-    testCompile "commons-cli:commons-cli:1.4"
-    testCompile "commons-codec:commons-codec:1.11"
     testCompile "junit:junit:4.12"
 }

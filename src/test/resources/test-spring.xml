@@ -5,7 +5,7 @@
        xmlns:repo="http://www.cuba-platform.org/schema/script/repositories"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
-        http://www.cuba-platform.org/schema/script/repositories com/company/rnd/scriptrepo/repository/script-repositories.xsd">
+        http://www.cuba-platform.org/schema/script/repositories http://www.cuba-platform.org/schema/script/repositories/script-repositories.xsd">
 
     <repo:script-repositories>
         <repo:base-packages>
