@@ -27,21 +27,31 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
 
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) throws BeanCreationException {
-        List<String> packagesToScan;
+        List<String> basePackages;
         Map<Class<? extends Annotation>, ScriptInfo>  customAnnotationsConfig;
         try {
-            packagesToScan = getPackagesToScan(element);
+            basePackages = getPackagesToScan(element);
             customAnnotationsConfig = getCustomAnnotationsConfig(element);
         } catch (ClassNotFoundException e) {
             throw new BeanCreationException(String.format("Error parsing bean definitions: %s", e.getMessage()), e);
         }
 
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ScriptRepositoryFactoryBean.class);
-        builder.addConstructorArgValue(packagesToScan);
-        builder.addConstructorArgValue(customAnnotationsConfig);
-        AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
-        parserContext.getRegistry().registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
-        return beanDefinition;
+        if (!parserContext.getRegistry().containsBeanDefinition(ScriptRepositoryFactoryBean.NAME)) {
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ScriptRepositoryFactoryBean.class);
+            builder.addConstructorArgValue(basePackages);
+            builder.addConstructorArgValue(customAnnotationsConfig);
+            AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+            parserContext.getRegistry().registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
+            return beanDefinition;
+        } else {
+            BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(ScriptRepositoryFactoryBean.NAME);
+            List<String> basePackagesArg = (List<String>)definition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
+            basePackagesArg.addAll(basePackages);
+            Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsArg =
+                    (Map<Class<? extends Annotation>, ScriptInfo>)definition.getConstructorArgumentValues().getArgumentValue(0, Map.class).getValue();
+            customAnnotationsArg.putAll(customAnnotationsConfig);
+            return definition;
+        }
     }
 
     private static List<String> getPackagesToScan(Element element){

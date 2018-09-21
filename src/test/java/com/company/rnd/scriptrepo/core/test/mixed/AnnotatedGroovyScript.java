@@ -1,4 +1,4 @@
-package com.company.rnd.scriptrepo.core.test.files;
+package com.company.rnd.scriptrepo.core.test.mixed;
 
 import com.company.rnd.scriptrepo.repository.ScriptMethod;
 
@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @ScriptMethod(providerBeanName = "groovyFileProvider", executorBeanName = "groovyJsrExecutor")
-public @interface GroovyScript {
+public @interface AnnotatedGroovyScript {
 }
