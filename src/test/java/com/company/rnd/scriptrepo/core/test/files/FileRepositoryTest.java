@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@ContextConfiguration(locations = {"classpath:test-spring.xml"})
+@ContextConfiguration(locations = {"classpath:com/company/rnd/scriptrepo/core/test/files/files-test-spring.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class FileRepositoryTest {
 

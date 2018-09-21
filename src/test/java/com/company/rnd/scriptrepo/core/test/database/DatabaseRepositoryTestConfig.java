@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.math.BigDecimal;
 
 @Configuration
-@PropertySource({"classpath:datasource.properties"})
+@PropertySource({"classpath:com/company/rnd/scriptrepo/core/test/database/datasource.properties"})
 public class DatabaseRepositoryTestConfig {
 
     @Value("${jdbc.url}")

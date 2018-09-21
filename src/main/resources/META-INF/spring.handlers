@@ -1,1 +1,1 @@
-http\://www.cuba-platform.org/schema/script/repositories=com.company.rnd.scriptrepo.repository.factory.ScriptRepositoryNamespaceHandler
+http\://www.cuba-platform.org/schema/script/repositories=com.company.rnd.scriptrepo.repository.config.ScriptRepositoryNamespaceHandler

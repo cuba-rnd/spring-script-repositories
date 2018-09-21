@@ -1,6 +1,5 @@
 package com.company.rnd.scriptrepo.repository.executor;
 
-import com.company.rnd.scriptrepo.repository.factory.ScriptExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

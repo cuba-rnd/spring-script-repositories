@@ -1,6 +1,6 @@
 package com.company.rnd.scriptrepo.core.test.database;
 
-import com.company.rnd.scriptrepo.repository.factory.ScriptProvider;
+import com.company.rnd.scriptrepo.repository.provider.ScriptProvider;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

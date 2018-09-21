@@ -32,7 +32,7 @@
         <xsd:complexType>
             <xsd:sequence>
                 <xsd:element name="base-packages" type="repositories-type"/>
-                <xsd:element name="annotations-config" type="annotation-mapping-type"/>
+                <xsd:element name="annotations-config" type="annotation-mapping-type" minOccurs="0"/>
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>

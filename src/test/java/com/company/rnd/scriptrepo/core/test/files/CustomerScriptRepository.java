@@ -13,7 +13,7 @@ public interface CustomerScriptRepository {
     @ScriptMethod
     String renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
 
-    @ScriptMethod
+    @GroovyScript
     Customer createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
 
 }

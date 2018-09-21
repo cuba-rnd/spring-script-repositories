@@ -10,7 +10,6 @@
     <repo:script-repositories>
         <repo:base-packages>
             <repo:base-package>com.company.rnd.scriptrepo.core.test.database</repo:base-package>
-            <repo:base-package>com.company.rnd.scriptrepo.core.test.files</repo:base-package>
         </repo:base-packages>
         <repo:annotations-config>
             <repo:annotation-mapping annotation-class="com.company.rnd.scriptrepo.core.test.database.DbGroovyScript"
@@ -20,6 +19,6 @@
     </repo:script-repositories>
 
     <!-- Annotation-based beans -->
-    <context:component-scan base-package="com.company.rnd.scriptrepo"/>
+    <context:component-scan base-package="com.company.rnd.scriptrepo.repository;com.company.rnd.scriptrepo.core.test.database"/>
 
 </beans>

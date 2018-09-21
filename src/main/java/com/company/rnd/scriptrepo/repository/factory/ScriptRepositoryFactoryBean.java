@@ -3,7 +3,9 @@ package com.company.rnd.scriptrepo.repository.factory;
 import com.company.rnd.scriptrepo.repository.ScriptMethod;
 import com.company.rnd.scriptrepo.repository.ScriptParam;
 import com.company.rnd.scriptrepo.repository.ScriptRepository;
-import com.company.rnd.scriptrepo.repository.factory.ScriptRepositoryConfigurationParser.ScriptInfo;
+import com.company.rnd.scriptrepo.repository.config.ScriptInfo;
+import com.company.rnd.scriptrepo.repository.executor.ScriptExecutor;
+import com.company.rnd.scriptrepo.repository.provider.ScriptProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
@@ -151,16 +154,17 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             Annotation[] methodAnnotations = method.getAnnotations();
             Set<Class<?>> annotClasses = Arrays.stream(methodAnnotations).map(Annotation::annotationType).collect(Collectors.toSet());
             boolean match = customAnnotationsConfig.keySet().stream().anyMatch(annotClasses::contains);
-            return method.isAnnotationPresent(ScriptMethod.class) || match;
+            ScriptMethod annot = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
+            return annot != null || match;
         }
 
         private ScriptInfo createMethodInfo(Method method) throws BeanCreationException {
-            if (method.isAnnotationPresent(ScriptMethod.class)) {
-                ScriptMethod annotationConfig = method.getAnnotation(ScriptMethod.class);
+            ScriptMethod annotationConfig = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
+            if (annotationConfig != null) { //If method is configured with annotations
                 String provider = annotationConfig.providerBeanName();
                 String executor = annotationConfig.executorBeanName();
                 return new ScriptInfo(ScriptMethod.class, provider, executor);
-            } else {
+            } else { //Method is configured in XML
                 Annotation[] methodAnnotations = method.getAnnotations();
                 Set<Class<? extends Annotation>> annotClasses = Arrays.stream(methodAnnotations).map(Annotation::annotationType).collect(Collectors.toSet());
                 Class<?> annotation = annotClasses.stream().filter(customAnnotationsConfig.keySet()::contains)

@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Statement;
 
-@ContextConfiguration(locations = {"classpath:test-spring.xml"})
+@ContextConfiguration(locations = {"classpath:com/company/rnd/scriptrepo/core/test/database/db-test-spring.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class DatabaseRepositoryTest {
 
