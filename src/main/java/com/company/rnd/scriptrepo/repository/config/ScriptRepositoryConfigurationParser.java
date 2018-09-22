@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.xml.DomUtils;
@@ -33,22 +31,7 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
             throw new BeanCreationException(String.format("Error parsing bean definitions: %s", e.getMessage()), e);
         }
 
-        if (!parserContext.getRegistry().containsBeanDefinition(ScriptRepositoryFactoryBean.NAME)) {
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ScriptRepositoryFactoryBean.class);
-            builder.addConstructorArgValue(basePackages);
-            builder.addConstructorArgValue(customAnnotationsConfig);
-            AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
-            parserContext.getRegistry().registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
-            return beanDefinition;
-        } else {
-            BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(ScriptRepositoryFactoryBean.NAME);
-            List<String> basePackagesArg = (List<String>)definition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
-            basePackagesArg.addAll(basePackages);
-            Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsArg =
-                    (Map<Class<? extends Annotation>, ScriptInfo>)definition.getConstructorArgumentValues().getArgumentValue(0, Map.class).getValue();
-            customAnnotationsArg.putAll(customAnnotationsConfig);
-            return definition;
-        }
+        return ScriptRepositoryFactoryBean.registerBean(parserContext.getRegistry(), basePackages, customAnnotationsConfig);
     }
 
     private static List<String> getPackagesToScan(Element element){

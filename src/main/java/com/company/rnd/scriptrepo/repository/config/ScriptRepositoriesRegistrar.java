@@ -3,9 +3,6 @@ package com.company.rnd.scriptrepo.repository.config;
 import com.company.rnd.scriptrepo.repository.factory.ScriptRepositoryFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -35,17 +32,7 @@ public class ScriptRepositoriesRegistrar implements ImportBeanDefinitionRegistra
 
         Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig = new HashMap<>();//We need it to be not immutable in case XML config parser will add anything
 
-        if (!registry.containsBeanDefinition(ScriptRepositoryFactoryBean.NAME)) {
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ScriptRepositoryFactoryBean.class);
-            builder.addConstructorArgValue(basePackages);
-            builder.addConstructorArgValue(customAnnotationsConfig);
-            AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
-            registry.registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
-        } else {
-            BeanDefinition definition = registry.getBeanDefinition(ScriptRepositoryFactoryBean.NAME);
-            List<String> basePackagesArg = (List<String>)definition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
-            basePackagesArg.addAll(basePackages);
-        }
+        ScriptRepositoryFactoryBean.registerBean(registry, basePackages, customAnnotationsConfig);
     }
 
     protected Class<? extends Annotation> getAnnotation() {

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.context.ApplicationContext;
@@ -47,6 +48,26 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
     private final Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig;
 
     private ApplicationContext ctx;
+
+    public static BeanDefinition registerBean(BeanDefinitionRegistry registry, List<String> basePackages, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
+        BeanDefinition beanDefinition;
+        if (!registry.containsBeanDefinition(ScriptRepositoryFactoryBean.NAME)) {
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ScriptRepositoryFactoryBean.class);
+            builder.addConstructorArgValue(basePackages);
+            builder.addConstructorArgValue(customAnnotationsConfig);
+            beanDefinition = builder.getBeanDefinition();
+            registry.registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
+        } else {
+            beanDefinition = registry.getBeanDefinition(ScriptRepositoryFactoryBean.NAME);
+            List<String> basePackagesArg = (List<String>)beanDefinition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
+            basePackagesArg.addAll(basePackages);
+            Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsArg =
+                    (Map<Class<? extends Annotation>, ScriptInfo>)beanDefinition.getConstructorArgumentValues().getArgumentValue(1, Map.class).getValue();
+            customAnnotationsArg.putAll(customAnnotationsConfig);
+        }
+        return beanDefinition;
+    }
+
 
     public ScriptRepositoryFactoryBean(List<String> basePackages, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
         this.basePackages = basePackages;
