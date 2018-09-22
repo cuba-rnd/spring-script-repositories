@@ -1,9 +1,19 @@
 package com.company.rnd.scriptrepo.repository.executor;
 
-import java.lang.reflect.Method;
+import java.util.Map;
 
+/**
+ * Interface for script executors implementation.
+ */
 public interface ScriptExecutor {
 
-    <T> T eval(String script, Method method, String[] argNames, Object[] args);
+    /**
+     * Executes script. Argument names will be mapped to values one-by-one.
+     * @param <T> script return type.
+     * @param script Script text.
+     * @param parameters Script parameters: name-value pairs
+     * @return Script execution result.
+     */
+    <T> T eval(String script, Map<String, Object> parameters);
 
 }

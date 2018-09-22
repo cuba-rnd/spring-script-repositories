@@ -16,10 +16,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Parses XML configuration for script repositories and registers factory that will produce proxies for
+ * script execution.
+ */
 public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptRepositoryConfigurationParser.class);
 
+    /**
+     * @see BeanDefinitionParser#parse(Element, ParserContext)
+     */
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) throws BeanCreationException {
         List<String> basePackages;
@@ -34,7 +41,12 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
         return ScriptRepositoryFactoryBean.registerBean(parserContext.getRegistry(), basePackages, customAnnotationsConfig);
     }
 
-    private static List<String> getPackagesToScan(Element element){
+    /**
+     * Reads package names form XML configuration.
+     * @param element XML element to parse.
+     * @return package names.
+     */
+    private List<String> getPackagesToScan(Element element){
         log.trace("Reading packages to be scanned to find Script Repositories");
         Element basePackagesEl = DomUtils.getChildElementByTagName(element, "base-packages");
         List<Element> packageNames = DomUtils.getChildElementsByTagName(basePackagesEl, "base-package");
@@ -46,8 +58,14 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<Class<? extends Annotation>, ScriptInfo> getCustomAnnotationsConfig(Element element) throws ClassNotFoundException {
+    /**
+     * Reads custom annotation configuration in case of XML config for script repositories.
+     * @param element XML element to parse.
+     * @return annotation class and bean names for script execution.
+     * @throws ClassNotFoundException if annotation class was not loaded.
+     */
+    @SuppressWarnings("unchecked")//Unchecked annotation class conversion
+    private Map<Class<? extends Annotation>, ScriptInfo> getCustomAnnotationsConfig(Element element) throws ClassNotFoundException {
         log.trace("Reading annotations configurations to create script methods later");
         Map<Class<? extends Annotation>, ScriptInfo> result = new HashMap<>();
         Element annotConfigEl = DomUtils.getChildElementByTagName(element, "annotations-config");

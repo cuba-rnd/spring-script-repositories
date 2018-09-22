@@ -14,6 +14,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface ScriptParam {
 
+    /**
+     * Parameter name that will be used in script.
+     * @return parameter name.
+     */
     String value();
 
 }

@@ -2,6 +2,9 @@ package com.company.rnd.scriptrepo.repository.config;
 
 import java.lang.annotation.Annotation;
 
+/**
+ * Struct like class to hold scripted method data.
+ */
 public class ScriptInfo {
     public final Class<? extends Annotation> scriptAnnotation;
     public final String provider;

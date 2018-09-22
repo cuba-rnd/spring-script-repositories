@@ -36,7 +36,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+/**
+ * Class that creates proxies for script repositories based on configuration data. Proxies will forward script repository interface method
+ * invocations to get script text from providers and then for evaluation to actual executor class.
+ *
+ * Factory scans packages and creates script repository proxies when context initialization is finished.
+ *
+ * @see BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry(BeanDefinitionRegistry)
+ */
 public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostProcessor, ApplicationContextAware {
 
     public static final String NAME = "scriptRepositoryFactory";
@@ -49,6 +58,15 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
     private ApplicationContext ctx;
 
+    /**
+     * Creates factory bean definition and registers it in spring context. In case of double configuration XML and annotation
+     * will merge configuration data - package names and custom annotation configuration.
+     * @param registry Spring bean definition registry
+     * @param basePackages list of base package names to scan for script repositories.
+     * @param customAnnotationsConfig configuration for custom annotations.
+     * @return proxy factory bean definition that was registered in spring context.
+     */
+    @SuppressWarnings("unchecked")//to avoid warnings on constructor argument cast
     public static BeanDefinition registerBean(BeanDefinitionRegistry registry, List<String> basePackages, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
         BeanDefinition beanDefinition;
         if (!registry.containsBeanDefinition(ScriptRepositoryFactoryBean.NAME)) {
@@ -59,21 +77,31 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             registry.registerBeanDefinition(ScriptRepositoryFactoryBean.NAME, beanDefinition);
         } else {
             beanDefinition = registry.getBeanDefinition(ScriptRepositoryFactoryBean.NAME);
-            List<String> basePackagesArg = (List<String>)beanDefinition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
+            List<String> basePackagesArg = (List<String>) beanDefinition.getConstructorArgumentValues().getArgumentValue(0, List.class).getValue();
             basePackagesArg.addAll(basePackages);
             Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsArg =
-                    (Map<Class<? extends Annotation>, ScriptInfo>)beanDefinition.getConstructorArgumentValues().getArgumentValue(1, Map.class).getValue();
+                    (Map<Class<? extends Annotation>, ScriptInfo>) beanDefinition.getConstructorArgumentValues().getArgumentValue(1, Map.class).getValue();
             customAnnotationsArg.putAll(customAnnotationsConfig);
         }
         return beanDefinition;
     }
 
-
+    /**
+     * Factory constructor.
+     * @param basePackages list of base package names to scan for script repositories.
+     * @param customAnnotationsConfig configuration for custom annotations.
+     */
     public ScriptRepositoryFactoryBean(List<String> basePackages, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
         this.basePackages = basePackages;
         this.customAnnotationsConfig = customAnnotationsConfig;
     }
 
+    /**
+     * Register script repository interfaces instances as beans so we can inject them into application. All interface instances
+     * will be created in a lazy manner using factory method.
+     * @see ScriptRepositoryFactoryBean#createRepository(Class, Map)
+     * @see BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry(BeanDefinitionRegistry)
+     */
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         ClassPathScanningCandidateComponentProvider provider
@@ -94,15 +122,30 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
     }
 
+    /**
+     * Empty method - nothing to do in our case.
+     * @see BeanDefinitionRegistryPostProcessor#postProcessBeanFactory(ConfigurableListableBeanFactory)
+     */
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
     }
 
+    /**
+     * Sets application context - we'll need it to get provider and executor beans dynamically on method invocation.
+     * @see ApplicationContextAware#setApplicationContext(ApplicationContext)
+     */
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         ctx = applicationContext;
     }
 
+    /**
+     * Factory method that creates proxies based on script repository interface and configuration.
+     * @param repositoryClass script repository interface class.
+     * @param customAnnotationsConfig custom annotation configurations for script execution.
+     * @param <T> repository class type.
+     * @return proxy that implements script repository interface.
+     */
     @SuppressWarnings({"unchecked", "unused"})
     <T> T createRepository(Class<T> repositoryClass, Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig) {
         if (!repositoryClass.isAnnotationPresent(ScriptRepository.class)) {
@@ -115,6 +158,10 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 new Class<?>[]{repositoryClass}, handler);
     }
 
+    /**
+     * Custom bean candidate provider that includes only annotated interfaces.
+     * @see ClassPathScanningCandidateComponentProvider
+     */
     static class ScriptRepositoryCandidateProvider extends ClassPathScanningCandidateComponentProvider {
 
         ScriptRepositoryCandidateProvider() {
@@ -129,6 +176,11 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
     }
 
+    /**
+     * Class that process all repository invocations. All method invocations that are not specific to script
+     * repository interface (equals, hashcode, etc.) will be redirected to Object class instance created within the class.
+     * Scripted method invocation configuration (method, provider bean instance and executor bean instance) are cached.
+     */
     static class RepositoryMethodsHandler implements InvocationHandler, Serializable {
 
         private static final Logger log = LoggerFactory.getLogger(RepositoryMethodsHandler.class);
@@ -146,6 +198,14 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             this.ctx = ctx;
         }
 
+        /**
+         * Main method that process script repository methods invocations.
+         * On the first stage it checks if the method is scripted by checking annotation
+         * (either ScriptMethod or pre-configured one) presence. If the method is not scripted, its invocation
+         * is delegated to an Object instance. Otherwise we get script provider, script executor and
+         * let them do their work.
+         * @see InvocationHandler#invoke(Object, Method, Object[])
+         */
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (!isScriptedMethod(method)) {
@@ -157,20 +217,24 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                     {
                         log.trace("Creating invocation info for method {} ", method.getName());
                         ScriptInfo scriptInfo = createMethodInfo(method);
-                        log.trace("Script annotation class name: {}", scriptInfo.scriptAnnotation.getName());
-                        log.trace("Provider bean name: {}", scriptInfo.provider);
-                        ScriptProvider provider = (ScriptProvider) ctx.getBean(scriptInfo.provider);
-                        log.trace("Executor bean name: {}", scriptInfo.executor);
-                        ScriptExecutor executor = (ScriptExecutor) ctx.getBean(scriptInfo.executor);
+                        log.trace("Script annotation class name: {}, provider: {}, executor: {}", scriptInfo.scriptAnnotation.getName(), scriptInfo.provider, scriptInfo.executor);
+                        ScriptProvider provider = ctx.getBean(scriptInfo.provider, ScriptProvider.class);
+                        ScriptExecutor executor = ctx.getBean(scriptInfo.executor, ScriptExecutor.class);
                         return new MethodInvocationInfo(provider, executor);
                     });
-            String[] paramNames = Arrays.stream(method.getParameters())
-                    .map(getParameterName())
-                    .toArray(String[]::new);
+
+            Map<String, Object> binds = createParameterMap(method, args);
+
             String script = invocationInfo.provider.getScript(method);
-            return invocationInfo.executor.eval(script, method, paramNames, args);
+            return invocationInfo.executor.eval(script, binds);
         }
 
+        /**
+         * Checks whether or not this method is scripted. It should be either annotated with
+         * ScriptMethod annotation or annotation annotated with ScriptMethod or custom annotation should be configured in XML.
+         * @param method method to be checked.
+         * @return true if method should be executed as scripted method.
+         */
         private boolean isScriptedMethod(Method method) {
             Annotation[] methodAnnotations = method.getAnnotations();
             Set<Class<?>> annotClasses = Arrays.stream(methodAnnotations).map(Annotation::annotationType).collect(Collectors.toSet());
@@ -179,6 +243,12 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             return annot != null || match;
         }
 
+        /**
+         * Creates method invocation data - annotation and provider and executor names.
+         * @param method method that should be processed.
+         * @return scripted method configuration.
+         * @throws BeanCreationException if method is neither annotated nor configured.
+         */
         private ScriptInfo createMethodInfo(Method method) throws BeanCreationException {
             ScriptMethod annotationConfig = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
             if (annotationConfig != null) { //If method is configured with annotations
@@ -194,13 +264,36 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             }
         }
 
+        /**
+         * Creates parameters map based on configured parameter names and actual argument values.
+         * @param method called method.
+         * @param args actual argument values.
+         * @return parameter name - value maps.
+         */
+        private Map<String, Object> createParameterMap(Method method, Object[] args) {
+            String[] argNames = Arrays.stream(method.getParameters())
+                    .map(getParameterName())
+                    .toArray(String[]::new);
+            if (argNames.length != args.length) {
+                throw new IllegalArgumentException(String.format("Parameters and args must be the same length. Parameters: %d args: %d", argNames.length, args.length));
+            }
+            return IntStream.range(0, argNames.length).boxed().
+                    collect(Collectors.toMap(i -> argNames[i], i -> args[i]));
+        }
+
+        /**
+         * Returns parameter name for a method.
+         * @return parameter name.
+         */
         private Function<Parameter, String> getParameterName() {
             return p -> p.isAnnotationPresent(ScriptParam.class)
                     ? p.getAnnotation(ScriptParam.class).value()
                     : p.getName();
         }
 
-
+        /**
+         * Structure for caching method invocation information.
+         */
         class MethodInvocationInfo {
             final ScriptProvider provider;
             final ScriptExecutor executor;

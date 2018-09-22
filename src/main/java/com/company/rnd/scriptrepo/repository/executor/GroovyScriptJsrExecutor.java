@@ -8,10 +8,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Evaluates Groovy script using JSR-223 javax.script API and bindings.
@@ -22,19 +19,13 @@ public class GroovyScriptJsrExecutor implements ScriptExecutor {
     private static final Logger log = LoggerFactory.getLogger(GroovyScriptJsrExecutor.class);
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> T eval(String script, Method method, String[] argNames, Object[] args) {
+    @SuppressWarnings("unchecked")//Unchecked cast on groovy eval result
+    public <T> T eval(String script, Map<String, Object> parameters) {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine groovy = manager.getEngineByName("groovy");
-        log.trace("Evaluating script. Method: {}, argNames: {}, args: {}", method.getName(), argNames, args);
-        if (argNames.length != args.length) {
-            throw new IllegalArgumentException(String.format("Parameters and args must be the same length. Parameters: %d args: %d", argNames.length, args.length));
-        }
-        Map<String, Object> binds = IntStream.range(0, argNames.length).boxed().
-                collect(Collectors.toMap(i -> argNames[i], i -> args[i]));
-        log.trace("Bindings: {}",binds);
+        log.trace("Script bindings: {}", parameters);
         try {
-            return (T) groovy.eval(script, new SimpleBindings(binds));
+            return (T) groovy.eval(script, new SimpleBindings(parameters));
         } catch (ScriptException e) {
             throw new RuntimeException("Error executing script", e);
         }

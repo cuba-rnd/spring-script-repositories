@@ -10,13 +10,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Annotation to enable scripting repositories.
+ * Will scan packages of the annotated configuration class for scripting repositories.
+ *
+ * */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 @Import(ScriptRepositoriesRegistrar.class)
 public @interface EnableScriptRepositories {
-
+    /**
+     * Packages to be scanned.
+     * @return aray of package names.
+     */
     String[] basePackages();
 
 }
