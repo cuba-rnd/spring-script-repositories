@@ -141,7 +141,7 @@ The script should use two parameters and return string.
 
 As an example:
 ```groovy
-return "2 - Customer with ${customerId} was renamed to ${newName}".toString()
+return "Customer with ${customerId} was renamed to ${newName}".toString()
 ``` 
 
 That's almost it. After this you should enable script repositories feature using annotations or XML. After that you can use 
