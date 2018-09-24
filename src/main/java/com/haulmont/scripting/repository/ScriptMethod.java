@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * Annotation that should be used to mark interface methods as available for scripting.
  * Also this annotation can be used as meta-annotation for custom annotations for scripted methods, e.g.
- * <code>
- * @ScriptMethod(providerBeanName="sqlScriptProvider", executorBeanName="sqlScriptExecutor")
- * public @interface SqlScriptMathod {...}
- * </code>
+ * <pre>
+ * &#64;ScriptMethod(providerBeanName="sqlScriptProvider", executorBeanName="sqlScriptExecutor")
+ * public @interface SqlScriptMethod {...}
+ * </pre>
  * Then annotation SqlScriptMethod can be used in code.
  *
  * Bean names are used instead of classes for better flexibility.

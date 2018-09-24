@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Class that registers script repositories in Spring context if annotation-based configuration is user.
+ * Class that registers script repositories in Spring context if annotation-based configuration is used.
  * @see EnableScriptRepositories
  */
 public class ScriptRepositoriesRegistrar implements ImportBeanDefinitionRegistrar {
