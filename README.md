@@ -163,3 +163,6 @@ public class CustomerService {
 ```
 ### More examples
 You can find examples in test classes. They include custom script provider and custom annotation configuration.  
+
+### References and thanks
+There is a good [article](https://zeroturnaround.com/rebellabs/scripting-your-java-application-with-groovy/) by [Anton Arhipov](https://github.com/antonarhipov) that helped us a lot with implementation of this library.
