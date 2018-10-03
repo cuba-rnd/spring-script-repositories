@@ -4,12 +4,13 @@ plugins {
 }
 
 group = 'com.haulmont.scripting'
-version = '0.1.0'
+version = '0.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral() 
 }
 
