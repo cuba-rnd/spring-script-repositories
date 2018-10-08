@@ -1,6 +1,5 @@
 package com.haulmont.scripting.core.test.database;
 
-import com.haulmont.scripting.core.test.files.FileRepositoryTest;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.After;
 import org.junit.Assert;
@@ -21,7 +20,7 @@ import java.sql.Statement;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class DatabaseRepositoryTest {
 
-    private static final Logger log = LoggerFactory.getLogger(FileRepositoryTest.class);
+    private static final Logger log = LoggerFactory.getLogger(DatabaseRepositoryTest.class);
 
     @Autowired
     private DatabaseRepositoryTestConfig.TestTaxService taxService;
@@ -51,7 +50,9 @@ public class DatabaseRepositoryTest {
 
     @Test
     public void testTaxCalculation () {
-        Assert.assertTrue(taxService.calculateTaxAmount(BigDecimal.TEN).compareTo(BigDecimal.valueOf(1.4)) < 0);
+        BigDecimal taxAmount = taxService.calculateTaxAmount(BigDecimal.TEN);
+        log.info("Tax amount is: {}", taxAmount);
+        Assert.assertTrue(taxAmount.compareTo(BigDecimal.valueOf(1.4)) < 0);
     }
 
 }

@@ -68,7 +68,15 @@ in this repository must be marked with ```@ScriptMethod```, default methods are 
 with ```@ScriptRepository``` annotations will be published in spring's context and can be injected into other spring beans. 
 
 When an interface method is called, the proxy invokes provider to get method script text and then executor to evaluate 
-the result. 
+the result.
+
+#Usage
+Specify library dependency in your project build file:
+
+```groovy
+        compile('com.haulmont.scripting:spring-script-repositories:0.1-SNAPSHOT')
+```
+ 
 ## Configuration 
 If you want to use default provider and executor then you need to import XML config from the library into your project:
 

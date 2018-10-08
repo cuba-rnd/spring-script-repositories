@@ -57,6 +57,7 @@ public class FileRepositoryTest {
         String newName = RandomStringUtils.randomAlphabetic(8);
         Date birthDate = DateUtils.parseDate("1988-12-14", "yyyy-MM-dd");
         Customer c = repo.createCustomer(newName, birthDate);
+        log.info("Customer: {}", c);
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());
         assertNotNull(c.getId());

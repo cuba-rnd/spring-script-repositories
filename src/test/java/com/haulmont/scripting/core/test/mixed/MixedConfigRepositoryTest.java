@@ -19,7 +19,6 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -47,6 +46,7 @@ public class MixedConfigRepositoryTest {
         UUID customerId = UUID.randomUUID();
         String newName = RandomStringUtils.randomAlphabetic(8);
         String s = repo.renameCustomer(customerId, newName);
+        log.info("Message: {}", s);
         assertNotNull(s);
         assertTrue(s.contains(customerId.toString()));
         assertTrue(s.contains(newName));
@@ -57,6 +57,7 @@ public class MixedConfigRepositoryTest {
         String newName = RandomStringUtils.randomAlphabetic(8);
         Date birthDate = DateUtils.parseDate("1988-12-15", "yyyy-MM-dd");
         Customer c = repo.createCustomer(newName, birthDate);
+        log.info("Customer created in groovy: {}", c);
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());
         assertNotNull(c.getId());
