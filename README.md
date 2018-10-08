@@ -70,7 +70,14 @@ with ```@ScriptRepository``` annotations will be published in spring's context a
 When an interface method is called, the proxy invokes provider to get method script text and then executor to evaluate 
 the result. 
 ## Configuration 
-There are two configuration options: annotations and XML.
+If you want to use default provider and executor then you need to import XML config from the library into your project:
+
+```xml
+    <import resource="classpath:com/haulmont/scripting/repository/**/script-repositories-config.xml"/>
+```
+
+In the project itself you can use two configuration options: annotations and XML. 
+
 ### Annotations configuration
 To tell spring to search for script repositories you need to add ```@EnableSpringRepositories``` annotation to one of the 
 configuration classes. For this annotation you need to specify array of package names that should be scanned.
