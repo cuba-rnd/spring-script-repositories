@@ -21,6 +21,8 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 
 @ContextConfiguration(locations = {"classpath:com/haulmont/scripting/core/test/mixed/mixed-test-spring.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
