@@ -78,11 +78,12 @@ Specify library dependency in your project build file:
 ```
  
 ## Configuration 
-If you want to use default provider and executor then you need to import XML config from the library into your project:
+If you want to use default provider and executor then you need to import XML config from the library into your project. Add the following line to your Spring configuration:
 
 ```xml
     <import resource="classpath:com/haulmont/scripting/repository/**/script-repositories-config.xml"/>
 ```
+Please note that library jar file should be placed near application jar files. E.g. if you use tomcat, please put this file to deployed application's WEB-INF/lib folder not to tomcat shared libs. We need it to use a proper classloader for proxy creation. 
 
 In the project itself you can use two configuration options: annotations and XML. 
 
