@@ -14,6 +14,6 @@ public interface ScriptProvider {
      * @param method Script Repository interface method to be executed.
      * @return Script text associated with this method.
      */
-    String getScript(Method method);
+    ScriptSource getScript(Method method);
 
 }

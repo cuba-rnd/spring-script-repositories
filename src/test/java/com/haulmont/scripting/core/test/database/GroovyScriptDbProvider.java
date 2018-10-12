@@ -1,6 +1,8 @@
 package com.haulmont.scripting.core.test.database;
 
 import com.haulmont.scripting.repository.provider.ScriptProvider;
+import com.haulmont.scripting.repository.provider.ScriptSource;
+import com.haulmont.scripting.repository.provider.SourceStatus;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Component("groovyDbProvider")
 public class GroovyScriptDbProvider implements ScriptProvider {
@@ -36,7 +39,7 @@ public class GroovyScriptDbProvider implements ScriptProvider {
     }
 
     @Override
-    public String getScript(Method method) {
+    public ScriptSource getScript(Method method) {
         Class<?> scriptRepositoryClass = method.getDeclaringClass();
         String methodName = method.getName();
         String scriptName = scriptRepositoryClass.getSimpleName() + "." + methodName;
@@ -44,9 +47,11 @@ public class GroovyScriptDbProvider implements ScriptProvider {
         try {
             script = getScriptTextbyName(scriptName);
             log.trace("Scripted method name: {} text: {}", scriptName, script);
-            return script;
+            return new ScriptSource(script, SourceStatus.FOUND, null);
+        } catch (SQLException e) {
+            return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
         } catch (Exception e) {
-            throw new IllegalStateException("Cannot fetch data from the database", e);
+            return new ScriptSource(null, SourceStatus.FAILURE, e);
         }
     }
 }

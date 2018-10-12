@@ -45,7 +45,7 @@ public class DatabaseRepositoryTestConfig {
         private TestTaxCalculator taxCalculator;
 
         public BigDecimal calculateTaxAmount(BigDecimal sum){
-            return taxCalculator.calculateTax(sum);
+            return taxCalculator.calculateTax(sum).getValue();
         }
 
     }

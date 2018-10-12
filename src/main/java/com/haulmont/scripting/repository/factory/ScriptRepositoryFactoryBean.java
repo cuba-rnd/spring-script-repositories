@@ -6,6 +6,7 @@ import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.ScriptInfo;
 import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
+import com.haulmont.scripting.repository.provider.ScriptSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -224,21 +225,30 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 return method.invoke(defaultDelegate, args);
             }
             log.debug("Class: {}, Proxy: {}, Method: {}, Args: {}", method.getDeclaringClass().getName(), proxy.getClass(), method.getName(), args);
-            MethodInvocationInfo invocationInfo =
-                    methodScriptInfoMap.computeIfAbsent(method, m ->
-                    {
-                        log.trace("Creating invocation info for method {} ", method.getName());
-                        ScriptInfo scriptInfo = createMethodInfo(method);
-                        log.trace("Script annotation class name: {}, provider: {}, executor: {}", scriptInfo.scriptAnnotation.getName(), scriptInfo.provider, scriptInfo.executor);
-                        ScriptProvider provider = ctx.getBean(scriptInfo.provider, ScriptProvider.class);
-                        ScriptExecutor executor = ctx.getBean(scriptInfo.executor, ScriptExecutor.class);
-                        return new MethodInvocationInfo(provider, executor);
-                    });
+            MethodInvocationInfo invocationInfo = getMethodInvocationInfo(method);
+
+            ScriptSource script = invocationInfo.provider.getScript(method);
 
             Map<String, Object> binds = createParameterMap(method, args);
 
-            String script = invocationInfo.provider.getScript(method);
-            return invocationInfo.executor.eval(script, binds);
+            return invocationInfo.executor.eval(script.getSource(), binds);
+        }
+
+        /**
+         * Creates method invocation info metadata and puts it to cache.
+         * @param method method to be invoked.
+         * @return cached method invocation metadata.
+         */
+        private MethodInvocationInfo getMethodInvocationInfo(Method method) {
+            return methodScriptInfoMap.computeIfAbsent(method, m ->
+            {
+                log.trace("Creating invocation info for method {} ", method.getName());
+                ScriptInfo scriptInfo = createMethodInfo(method);
+                log.trace("Script annotation class name: {}, provider: {}, executor: {}", scriptInfo.scriptAnnotation.getName(), scriptInfo.provider, scriptInfo.executor);
+                ScriptProvider provider = ctx.getBean(scriptInfo.provider, ScriptProvider.class);
+                ScriptExecutor executor = ctx.getBean(scriptInfo.executor, ScriptExecutor.class);
+                return new MethodInvocationInfo(provider, executor);
+            });
         }
 
         /**

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,16 +23,19 @@ public class GroovyScriptFileProvider implements ScriptProvider {
     private static final Logger log = LoggerFactory.getLogger(GroovyScriptFileProvider.class);
 
     @Override
-    public String getScript(Method method) {
+    public ScriptSource getScript(Method method) {
         Class<?> scriptRepositoryClass = method.getDeclaringClass();
         String methodName = method.getName();
         String fileName = methodName + ".groovy";
         log.trace("Getting groovy script from file: {}", fileName);
         InputStream resourceAsStream = scriptRepositoryClass.getResourceAsStream(fileName);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8))) {
-            return reader.lines().collect(Collectors.joining("\n"));
+            String src = reader.lines().collect(Collectors.joining("\n"));
+            return new ScriptSource(src, SourceStatus.FOUND, null);
+        } catch (FileNotFoundException e) {
+            return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
         } catch (IOException e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
+            return new ScriptSource(null, SourceStatus.FAILURE, e);
         }
     }
 }
