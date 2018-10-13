@@ -36,7 +36,7 @@ public class ScriptRepositoriesRegistrar implements ImportBeanDefinitionRegistra
 
         List<String> basePackages = Arrays.asList(attributes.getStringArray("basePackages"));
 
-        Map<Class<? extends Annotation>, ScriptInfo> customAnnotationsConfig = new HashMap<>();//We need it to be not immutable in case XML config parser will add anything
+        Map<Class<? extends Annotation>, AnnotationConfig> customAnnotationsConfig = new HashMap<>();//We need it to be not immutable in case XML config parser will add anything
 
         ScriptRepositoryFactoryBean.registerBean(registry, basePackages, customAnnotationsConfig);
     }
