@@ -30,7 +30,7 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) throws BeanCreationException {
         List<String> basePackages;
-        Map<Class<? extends Annotation>, ScriptInfo>  customAnnotationsConfig;
+        Map<Class<? extends Annotation>, AnnotationConfig>  customAnnotationsConfig;
         try {
             basePackages = getPackagesToScan(element);
             customAnnotationsConfig = getCustomAnnotationsConfig(element);
@@ -65,9 +65,9 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
      * @throws ClassNotFoundException if annotation class was not loaded.
      */
     @SuppressWarnings("unchecked")//Unchecked annotation class conversion
-    private Map<Class<? extends Annotation>, ScriptInfo> getCustomAnnotationsConfig(Element element) throws ClassNotFoundException {
+    private Map<Class<? extends Annotation>, AnnotationConfig> getCustomAnnotationsConfig(Element element) throws ClassNotFoundException {
         log.trace("Reading annotations configurations to create script methods later");
-        Map<Class<? extends Annotation>, ScriptInfo> result = new HashMap<>();
+        Map<Class<? extends Annotation>, AnnotationConfig> result = new HashMap<>();
         Element annotConfigEl = DomUtils.getChildElementByTagName(element, "annotations-config");
         if (annotConfigEl == null){
             return result;
@@ -77,7 +77,7 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
             String providerBeanName = el.getAttribute("provider-bean-name");
             String executorBeanName = el.getAttribute("executor-bean-name");
             Class<? extends Annotation> annotationClass = (Class<? extends Annotation>)Class.forName(el.getAttribute("annotation-class"));
-            result.put(annotationClass, new ScriptInfo(annotationClass, providerBeanName, executorBeanName));
+            result.put(annotationClass, new AnnotationConfig(annotationClass, providerBeanName, executorBeanName));
         }
         return result;
     }

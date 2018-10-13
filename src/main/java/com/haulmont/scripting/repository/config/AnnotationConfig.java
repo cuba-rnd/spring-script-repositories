@@ -5,12 +5,12 @@ import java.lang.annotation.Annotation;
 /**
  * Struct like class to hold scripted method data.
  */
-public class ScriptInfo {
+public class AnnotationConfig {
     public final Class<? extends Annotation> scriptAnnotation;
     public final String provider;
     public final String executor;
 
-    public ScriptInfo(Class<? extends Annotation> scriptAnnotation, String provider, String executor) {
+    public AnnotationConfig(Class<? extends Annotation> scriptAnnotation, String provider, String executor) {
         this.scriptAnnotation = scriptAnnotation;
         this.provider = provider;
         this.executor = executor;
@@ -18,7 +18,7 @@ public class ScriptInfo {
 
     @Override
     public String toString() {
-        return "ScriptInfo{" +
+        return "AnnotationConfig{" +
                 "scriptAnnotation=" + scriptAnnotation.getName() +
                 ", provider='" + provider + '\'' +
                 ", executor='" + executor + '\'' +

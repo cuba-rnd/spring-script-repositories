@@ -2,6 +2,7 @@ package com.haulmont.scripting.core.test.database;
 
 import com.haulmont.scripting.repository.ScriptParam;
 import com.haulmont.scripting.repository.ScriptRepository;
+import com.haulmont.scripting.repository.executor.ExecutionResult;
 
 import java.math.BigDecimal;
 
@@ -9,6 +10,6 @@ import java.math.BigDecimal;
 public interface TestTaxCalculator {
 
     @DbGroovyScript
-    BigDecimal calculateTax(@ScriptParam("amount") BigDecimal amount);
+    ExecutionResult<BigDecimal> calculateTax(@ScriptParam("amount") BigDecimal amount);
 
 }

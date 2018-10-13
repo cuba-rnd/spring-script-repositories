@@ -47,7 +47,7 @@ public class MixedConfigRepositoryTest {
     public void testRunSimpleScript() {
         UUID customerId = UUID.randomUUID();
         String newName = RandomStringUtils.randomAlphabetic(8);
-        String s = repo.renameCustomer(customerId, newName);
+        String s = repo.renameCustomer(customerId, newName).getValue();
         log.info("Message: {}", s);
         assertNotNull(s);
         assertTrue(s.contains(customerId.toString()));
@@ -58,7 +58,7 @@ public class MixedConfigRepositoryTest {
     public void testCreateObject() throws ParseException {
         String newName = RandomStringUtils.randomAlphabetic(8);
         Date birthDate = DateUtils.parseDate("1988-12-15", "yyyy-MM-dd");
-        Customer c = repo.createCustomer(newName, birthDate);
+        Customer c = repo.createCustomer(newName, birthDate).getValue();
         log.info("Customer created in groovy: {}", c);
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());
