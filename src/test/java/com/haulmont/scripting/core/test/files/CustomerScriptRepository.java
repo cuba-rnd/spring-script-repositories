@@ -12,9 +12,9 @@ import java.util.UUID;
 public interface CustomerScriptRepository {
 
     @ScriptMethod
-    ExecutionResult<String> renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
+    String renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
 
     @GroovyScript
-    ExecutionResult<Customer> createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
+    Customer createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
 
 }

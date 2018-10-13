@@ -53,7 +53,7 @@ public class FileRepositoryTest {
     public void testRunSimpleScript() {
         UUID customerId = UUID.randomUUID();
         String newName = RandomStringUtils.randomAlphabetic(8);
-        String s = repo.renameCustomer(customerId, newName).getValue();
+        String s = repo.renameCustomer(customerId, newName);
         log.info(s);
         assertNotNull(s);
         assertTrue(s.contains(customerId.toString()));
@@ -64,7 +64,7 @@ public class FileRepositoryTest {
     public void testCreateObject() throws ParseException {
         String newName = RandomStringUtils.randomAlphabetic(8);
         Date birthDate = DateUtils.parseDate("1988-12-14", "yyyy-MM-dd");
-        Customer c = repo.createCustomer(newName, birthDate).getValue();
+        Customer c = repo.createCustomer(newName, birthDate);
         log.info("Customer: {}", c);
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());
