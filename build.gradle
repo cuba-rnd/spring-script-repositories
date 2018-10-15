@@ -50,7 +50,8 @@ dependencies {
 
     compile "ch.qos.logback:logback-classic:1.2.3"
     compile "org.slf4j:log4j-over-slf4j:1.7.25"
-
+    compile "org.jooq:joor-java-8:0.9.9"
+    
     compile "org.springframework:spring-core:4.3.19.RELEASE"
     compile "org.springframework:spring-beans:4.3.19.RELEASE"
     compile "org.springframework:spring-context-support:4.3.19.RELEASE"

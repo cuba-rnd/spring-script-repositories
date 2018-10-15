@@ -8,6 +8,7 @@ import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
 import com.haulmont.scripting.repository.provider.ScriptSource;
 import com.haulmont.scripting.repository.provider.SourceStatus;
+import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -30,6 +31,7 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -246,9 +248,9 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             if (script.getStatus() == SourceStatus.NOT_FOUND) {
                 //Try to execute default method
                 if (method.isDefault()) {
-                    return executeDefaultMethod(proxy, method, args, repositoryClass);
+                    return executeDefaultMethod(method, args, repositoryClass);
                 } else {
-                    throw new UnsupportedOperationException();
+                    throw new UnsupportedOperationException("Method "+method+" should have either script implementation or be default");
                 }
 
             } else {
@@ -334,35 +336,23 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         /**
          * Default interface method invocation. Refactor this and ensure that we have the same code everywhere.
          *
-         * @param proxy  Entity View interface proxy instance.
-         * @param method Interface default method to be invoked.
-         * @param args   Method's arguments.
-         * @param interfaceClass
+         * @param method         Interface default method to be invoked.
+         * @param args           Method's arguments.
+         * @param interfaceClass interface which default method to be invoked.
          * @return Default interface method invocation result.
          * @throws NoSuchMethodException in case default method is not found.
          * @link https://blog.jooq.org/2018/03/28/correct-reflective-access-to-interface-default-methods-in-java-8-9-10/
          */
-        private Object executeDefaultMethod(Object proxy, Method method, Object[] args, Class<?> interfaceClass) throws NoSuchMethodException {
-            //TODO consider refactoring
-            Method interfaceMethod = interfaceClass.getMethod(method.getName(), method.getParameterTypes());
-            Class<?> declaringClass = method.getDeclaringClass();
-            log.trace("Invoking default method {} from interface {}", method.getName(), declaringClass);
+        private Object executeDefaultMethod(Method method, Object[] args, Class<?> interfaceClass) throws NoSuchMethodException {
             try {
-                //HACK! Does not work in Java 9 and 10
-                Constructor<MethodHandles.Lookup> constructor =
-                        MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
-                constructor.setAccessible(true);
-                Object result = constructor.newInstance(declaringClass)
-                        .in(declaringClass)
-                        .unreflectSpecial(interfaceMethod, interfaceMethod.getDeclaringClass())
-                        .bindTo(proxy)
-                        .invokeWithArguments(args);
-                return result;
-            } catch (Throwable throwable) {
-                throw new UnsupportedOperationException(
-                        String.format("Method %s cannot be executed by script repository %s"
-                        , method.getName()
-                        , this.repositoryClass.getSimpleName()), throwable);
+                Object typedProxyWithDefaultMethod = Reflect.on(new Object()).as(interfaceClass);
+                Method defaultMethod = interfaceClass.
+                        getMethod(method.getName(), method.getParameterTypes());
+                return defaultMethod.invoke(typedProxyWithDefaultMethod, args);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new UnsupportedOperationException(String.format("Default method %s cannot be invoked on %s: %s"
+                        , method.getName(), interfaceClass.getName(), e.getMessage())
+                        , e);
             }
         }
 
