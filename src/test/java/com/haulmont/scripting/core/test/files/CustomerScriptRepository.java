@@ -17,4 +17,12 @@ public interface CustomerScriptRepository {
     @GroovyScript
     Customer createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
 
+    @ScriptMethod
+    default String getDefaultName() {
+        return "NewCustomer";
+    }
+
+    @ScriptMethod
+    String getDefaultError();
+
 }

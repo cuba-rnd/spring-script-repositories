@@ -32,7 +32,7 @@ public class GroovyScriptFileProvider implements ScriptProvider {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8))) {
             String src = reader.lines().collect(Collectors.joining("\n"));
             return new ScriptSource(src, SourceStatus.FOUND, null);
-        } catch (FileNotFoundException e) {
+        } catch (NullPointerException | FileNotFoundException e) {//getResourceAsStream returns null if file not found
             return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
         } catch (IOException e) {
             return new ScriptSource(null, SourceStatus.FAILURE, e);
