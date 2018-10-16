@@ -14,6 +14,6 @@ public interface ScriptExecutor {
      * @param parameters Script parameters: name-value pairs
      * @return Script execution result.
      */
-    <T> ScriptResult<T> eval(String script, Map<String, Object> parameters);
+    <T> T eval(String script, Map<String, Object> parameters);
 
 }

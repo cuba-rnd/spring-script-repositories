@@ -3,8 +3,9 @@ package com.haulmont.scripting.repository.factory;
 import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
-import com.haulmont.scripting.repository.executor.ScriptResult;
+import com.haulmont.scripting.repository.executor.ExecutionStatus;
 import com.haulmont.scripting.repository.executor.ScriptExecutor;
+import com.haulmont.scripting.repository.executor.ScriptResult;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
 import com.haulmont.scripting.repository.provider.ScriptSource;
 import com.haulmont.scripting.repository.provider.SourceStatus;
@@ -248,22 +249,28 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 if (method.isDefault()) {
                     return executeDefaultMethod(method, args, repositoryClass);
                 } else {
-                    throw new UnsupportedOperationException("Method "+method+" should have either script implementation or be default");
+                    throw new UnsupportedOperationException(
+                            String.format("Method %s should have either script implementation or be default", method));
                 }
-
             } else {
                 Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
-                ScriptResult<Object> scriptResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
-                if (ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType())) {
-                    return scriptResult;
-                } else {
-                    if (scriptResult.getStatus().isSuccessful()) {
-                        return scriptResult.getValue();
-                    } else {
-                        throw scriptResult.getError();
+                try {
+                    Object scriptResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
+                    if (shouldWrapResult(invocationInfo)) {
+                        return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
                     }
+                    return scriptResult;
+                } catch (Throwable ex) {
+                    if (shouldWrapResult(invocationInfo)) {
+                        return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
+                    }
+                    throw ex;
                 }
             }
+        }
+
+        private boolean shouldWrapResult(ScriptInvocationMetadata invocationInfo) {
+            return ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType());
         }
 
         /**
@@ -313,9 +320,10 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         private AnnotationConfig getAnnotationConfig(Method method) throws BeanCreationException {
             ScriptMethod annotationConfig = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
             if (annotationConfig != null) { //If method is configured with custom annotation annotated with ScriptMethod
-                String provider = annotationConfig.providerBeanName();
-                String executor = annotationConfig.executorBeanName();
-                return new AnnotationConfig(ScriptMethod.class, provider, executor);
+                return new AnnotationConfig(ScriptMethod.class,
+                        annotationConfig.providerBeanName(),
+                        annotationConfig.executorBeanName(),
+                        annotationConfig.description());
             } else { //Annotation is configured in XML
                 Annotation[] methodAnnotations = method.getAnnotations();
                 Set<Class<? extends Annotation>> annotClasses = Arrays.stream(methodAnnotations)
@@ -332,7 +340,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
 
         /**
-         * Default interface method invocation. Refactor this and ensure that we have the same code everywhere.
+         * Default interface method invocation.
          *
          * @param method         Interface default method to be invoked.
          * @param args           Method's arguments.
