@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @ContextConfiguration(locations = {"classpath:com/haulmont/scripting/core/test/files/files-test-spring.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -74,9 +75,21 @@ public class FileRepositoryTest {
     @Test
     public void testScriptMetadata() {
         List<ScriptInvocationMetadata> scripsMetadata = scriptRepositoryFactoryBean.getMethodInvocationsInfo();
-        assertEquals(2, scripsMetadata.size());
+        assertEquals(4, scripsMetadata.size());
         List<String> methods = scripsMetadata.stream().map(info -> info.getMethod().getName()).collect(Collectors.toList());
-        assertTrue(methods.containsAll(Arrays.asList("renameCustomer", "createCustomer")));
+        assertTrue(methods.containsAll(Arrays.asList("renameCustomer", "createCustomer", "getDefaultName", "getDefaultError")));
     }
 
+    @Test
+    public void testDefaultMethodExecution(){
+        String defaultName = repo.getDefaultName();
+        assertEquals("NewCustomer", defaultName);
+    }
+
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testErrorMethodExecution() {
+        String errorLine = repo.getDefaultError();
+        fail("Non-default method without an underlying script must throw an error");
+    }
 }

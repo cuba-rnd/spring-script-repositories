@@ -1,6 +1,6 @@
 package com.haulmont.scripting.repository.executor;
 
-public class ExecutionResult<T> {
+public class ScriptResult<T> {
 
     private T value;
 
@@ -8,7 +8,7 @@ public class ExecutionResult<T> {
 
     private Throwable error;
 
-    public ExecutionResult(T value, ExecutionStatus status, Throwable error) {
+    public ScriptResult(T value, ExecutionStatus status, Throwable error) {
         this.value = value;
         this.status = status;
         this.error = error;

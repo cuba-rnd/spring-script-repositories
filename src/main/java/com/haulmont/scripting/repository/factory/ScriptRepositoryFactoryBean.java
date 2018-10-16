@@ -3,10 +3,13 @@ package com.haulmont.scripting.repository.factory;
 import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
-import com.haulmont.scripting.repository.executor.ExecutionResult;
+import com.haulmont.scripting.repository.executor.ExecutionStatus;
 import com.haulmont.scripting.repository.executor.ScriptExecutor;
+import com.haulmont.scripting.repository.executor.ScriptResult;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
 import com.haulmont.scripting.repository.provider.ScriptSource;
+import com.haulmont.scripting.repository.provider.SourceStatus;
+import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -27,6 +30,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -236,19 +240,37 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
             ScriptSource script = invocationInfo.getProvider().getScript(method);
 
-            Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
+            if (script.getStatus() == SourceStatus.FAILURE) {
+                throw script.getError();
+            }
 
-            ExecutionResult<Object> executionResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
-
-            if (ExecutionResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType())) {
-                return executionResult;
-            } else {
-                if (executionResult.getStatus().isSuccessful()) {
-                    return executionResult.getValue();
+            if (script.getStatus() == SourceStatus.NOT_FOUND) {
+                //Try to execute default method
+                if (method.isDefault()) {
+                    return executeDefaultMethod(method, args, repositoryClass);
                 } else {
-                    throw executionResult.getError();
+                    throw new UnsupportedOperationException(
+                            String.format("Method %s should have either script implementation or be default", method));
+                }
+            } else {
+                Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
+                try {
+                    Object scriptResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
+                    if (shouldWrapResult(invocationInfo)) {
+                        return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
+                    }
+                    return scriptResult;
+                } catch (Throwable ex) {
+                    if (shouldWrapResult(invocationInfo)) {
+                        return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
+                    }
+                    throw ex;
                 }
             }
+        }
+
+        private boolean shouldWrapResult(ScriptInvocationMetadata invocationInfo) {
+            return ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType());
         }
 
         /**
@@ -298,9 +320,10 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         private AnnotationConfig getAnnotationConfig(Method method) throws BeanCreationException {
             ScriptMethod annotationConfig = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
             if (annotationConfig != null) { //If method is configured with custom annotation annotated with ScriptMethod
-                String provider = annotationConfig.providerBeanName();
-                String executor = annotationConfig.executorBeanName();
-                return new AnnotationConfig(ScriptMethod.class, provider, executor);
+                return new AnnotationConfig(ScriptMethod.class,
+                        annotationConfig.providerBeanName(),
+                        annotationConfig.executorBeanName(),
+                        annotationConfig.description());
             } else { //Annotation is configured in XML
                 Annotation[] methodAnnotations = method.getAnnotations();
                 Set<Class<? extends Annotation>> annotClasses = Arrays.stream(methodAnnotations)
@@ -310,10 +333,35 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                         .filter(customAnnotationsConfig.keySet()::contains)
                         .findAny()
                         .orElseThrow(() -> new BeanCreationException(
-                                String.format("A method %s is not a scripted method. Annotation is not configured in XML", method.getName())));
+                                String.format("A method %s is not a scripted method. Annotation is not configured in XML"
+                                        , method.getName())));
                 return customAnnotationsConfig.get(annotation);
             }
         }
+
+        /**
+         * Default interface method invocation.
+         *
+         * @param method         Interface default method to be invoked.
+         * @param args           Method's arguments.
+         * @param interfaceClass interface which default method to be invoked.
+         * @return Default interface method invocation result.
+         * @throws NoSuchMethodException in case default method is not found.
+         * @link https://blog.jooq.org/2018/03/28/correct-reflective-access-to-interface-default-methods-in-java-8-9-10/
+         */
+        private Object executeDefaultMethod(Method method, Object[] args, Class<?> interfaceClass) throws NoSuchMethodException {
+            try {
+                Object typedProxyWithDefaultMethod = Reflect.on(new Object()).as(interfaceClass);
+                Method defaultMethod = interfaceClass.
+                        getMethod(method.getName(), method.getParameterTypes());
+                return defaultMethod.invoke(typedProxyWithDefaultMethod, args);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new UnsupportedOperationException(String.format("Default method %s cannot be invoked on %s: %s"
+                        , method.getName(), interfaceClass.getName(), e.getMessage())
+                        , e);
+            }
+        }
+
 
     }
 

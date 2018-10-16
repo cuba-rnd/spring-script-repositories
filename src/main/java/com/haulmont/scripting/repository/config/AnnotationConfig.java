@@ -9,11 +9,13 @@ public class AnnotationConfig {
     public final Class<? extends Annotation> scriptAnnotation;
     public final String provider;
     public final String executor;
+    public final String description;
 
-    public AnnotationConfig(Class<? extends Annotation> scriptAnnotation, String provider, String executor) {
+    public AnnotationConfig(Class<? extends Annotation> scriptAnnotation, String provider, String executor, String description) {
         this.scriptAnnotation = scriptAnnotation;
         this.provider = provider;
         this.executor = executor;
+        this.description = description;
     }
 
     @Override
