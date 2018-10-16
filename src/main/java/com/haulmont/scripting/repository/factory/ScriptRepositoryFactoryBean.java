@@ -3,7 +3,7 @@ package com.haulmont.scripting.repository.factory;
 import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
-import com.haulmont.scripting.repository.executor.ExecutionResult;
+import com.haulmont.scripting.repository.executor.ScriptResult;
 import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
 import com.haulmont.scripting.repository.provider.ScriptSource;
@@ -28,8 +28,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -255,14 +253,14 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
             } else {
                 Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
-                ExecutionResult<Object> executionResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
-                if (ExecutionResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType())) {
-                    return executionResult;
+                ScriptResult<Object> scriptResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
+                if (ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType())) {
+                    return scriptResult;
                 } else {
-                    if (executionResult.getStatus().isSuccessful()) {
-                        return executionResult.getValue();
+                    if (scriptResult.getStatus().isSuccessful()) {
+                        return scriptResult.getValue();
                     } else {
-                        throw executionResult.getError();
+                        throw scriptResult.getError();
                     }
                 }
             }

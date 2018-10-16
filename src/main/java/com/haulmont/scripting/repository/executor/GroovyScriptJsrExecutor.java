@@ -20,15 +20,15 @@ public class GroovyScriptJsrExecutor implements ScriptExecutor {
 
     @Override
     @SuppressWarnings("unchecked")//Unchecked cast on groovy eval result
-    public <T> ExecutionResult<T> eval(String script, Map<String, Object> parameters) {
+    public <T> ScriptResult<T> eval(String script, Map<String, Object> parameters) {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine groovy = manager.getEngineByName("groovy");
         log.trace("Script bindings: {}", parameters);
         try {
             T execResultValue = (T) groovy.eval(script, new SimpleBindings(parameters));
-            return new ExecutionResult<>(execResultValue, ExecutionStatus.SUCCESS, null);
+            return new ScriptResult<>(execResultValue, ExecutionStatus.SUCCESS, null);
         } catch (ScriptException e) {
-            return new ExecutionResult<>(null, ExecutionStatus.FAILURE, e);
+            return new ScriptResult<>(null, ExecutionStatus.FAILURE, e);
         }
     }
 }
