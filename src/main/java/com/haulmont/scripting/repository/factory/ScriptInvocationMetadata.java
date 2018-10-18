@@ -41,8 +41,9 @@ public class ScriptInvocationMetadata {
         String[] argNames = Arrays.stream(method.getParameters())
                 .map(getParameterName())
                 .toArray(String[]::new);
-        if (argNames.length != args.length) {
-            throw new IllegalArgumentException(String.format("Parameters and args must be the same length. Parameters: %d args: %d", argNames.length, args.length));
+        int length = args != null ? args.length : 0;
+        if (argNames.length != length) {
+            throw new IllegalArgumentException(String.format("Parameters and args must be the same length. Parameters: %d args: %d", argNames.length, length));
         }
         Map<String, Object> paramsMap = new HashMap<>(argNames.length);
         for (int i = 0; i < argNames.length; i++) {
