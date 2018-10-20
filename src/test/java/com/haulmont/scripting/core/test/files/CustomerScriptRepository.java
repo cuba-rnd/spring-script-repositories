@@ -24,7 +24,7 @@ public interface CustomerScriptRepository {
     @ScriptMethod
     String getDefaultError();
 
-    @ScriptMethod(providerBeanName = "fileSystemProvider")
-    String createProduct();
+    @ScriptMethod
+    String sayHello();
 
 }

@@ -28,7 +28,7 @@ public @interface ScriptRepository {
  bean and script executor bean. 
  ```java
 public @interface ScriptMethod {
-    String providerBeanName() default "groovyFileProvider";
+    String providerBeanName() default "appResourceProvider";
     String executorBeanName() default "groovyJsrExecutor";
     String description() default "";
 }

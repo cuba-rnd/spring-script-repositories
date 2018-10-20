@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@ScriptMethod(providerBeanName = "groovyFileProvider", executorBeanName = "groovyJsrExecutor")
+@ScriptMethod(providerBeanName = "appResourceProvider", executorBeanName = "groovyJsrExecutor")
 public @interface GroovyScript {
 }

@@ -77,7 +77,7 @@ public class FileRepositoryTest {
         List<ScriptInvocationMetadata> scripsMetadata = scriptRepositoryFactoryBean.getMethodInvocationsInfo();
         assertEquals(5, scripsMetadata.size());
         List<String> methods = scripsMetadata.stream().map(info -> info.getMethod().getName()).collect(Collectors.toList());
-        assertTrue(methods.containsAll(Arrays.asList("renameCustomer", "createCustomer", "getDefaultName", "getDefaultError", "createProduct")));
+        assertTrue(methods.containsAll(Arrays.asList("renameCustomer", "createCustomer", "getDefaultName", "getDefaultError", "sayHello")));
     }
 
     @Test
@@ -93,11 +93,10 @@ public class FileRepositoryTest {
         fail("Non-default method without an underlying script must throw an error");
     }
 
-
     @Test
-    public void testFileBasedScript(){
-        String defaultName = repo.createProduct();
-        assertEquals("It works!", defaultName);
+    public void testResourceBasedScript(){
+        String hello = repo.sayHello();
+        assertEquals("Hello!", hello);
     }
 
 }

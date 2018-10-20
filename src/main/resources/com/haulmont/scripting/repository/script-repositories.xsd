@@ -20,7 +20,7 @@
             <xsd:element name="annotation-mapping">
                 <xsd:complexType>
                     <xsd:attribute name="annotation-class" type="xsd:string"/>
-                    <xsd:attribute name="provider-bean-name" type="xsd:string" default="groovyFileProvider"/>
+                    <xsd:attribute name="provider-bean-name" type="xsd:string" default="appResourceProvider"/>
                     <xsd:attribute name="executor-bean-name" type="xsd:string" default="groovyJsrExecutor"/>
                     <xsd:attribute name="description" type="xsd:string" default=""/>
                 </xsd:complexType>

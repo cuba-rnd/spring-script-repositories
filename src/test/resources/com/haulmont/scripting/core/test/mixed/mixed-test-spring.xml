@@ -13,7 +13,7 @@
         </repo:base-packages>
         <repo:annotations-config>
             <repo:annotation-mapping annotation-class="com.haulmont.scripting.core.test.mixed.XmlGroovyScript"
-                                     provider-bean-name="groovyFileProvider"
+                                     provider-bean-name="appResourceProvider"
                                      executor-bean-name="groovyJsrExecutor"/>
         </repo:annotations-config>
     </repo:script-repositories>

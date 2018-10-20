@@ -1,4 +1,6 @@
-package com.haulmont.scripting.core.test.files
+package com.haulmont.scripting.scripts
+
+import com.haulmont.scripting.core.test.files.Customer
 
 class CustomerImpl implements Customer{
 
