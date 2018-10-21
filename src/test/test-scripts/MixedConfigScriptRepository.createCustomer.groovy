@@ -1,5 +1,3 @@
-package com.haulmont.scripting.scripts
-
 import com.haulmont.scripting.core.test.files.Customer
 
 class CustomerImplMixed implements Customer{
