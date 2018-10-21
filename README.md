@@ -1,6 +1,7 @@
 # Script Repository Interface 
 Scripting in java applications is not a rare thing. Sometimes you need to extend your current business logic or 
-add some application management logic. 
+add some application management logic. It is very useful since business logic might not be well-defined at the moment 
+of an application's development, or you need to change it frequently without redeploying the application.
 
 Scripting adds flexibility to an application, but also it adds some challenges:
 1. Usually scripts are scattered along the application, so it is quite hard to manage numerous ```GroovyShell``` calls.
@@ -9,13 +10,83 @@ Scripting adds flexibility to an application, but also it adds some challenges:
 The purpose of this library is to add some order into scripting extension points. 
 
 The idea behind this library is simple. A developer creates an interface and links its methods to scripts using
-annotations and two classes: script provider and script executor. Provider "knows" how to get script source text
-and executor evaluates it and return results.
+annotations.
 
 This approach adds "type-safety" to the process of passing script parameters and a developer will know what will be a
 type of the script evaluation result. 
 
- The library provides the following:
+## Usage
+To start working with the script repositories, you need to do the following:
+
+1. Specify library dependency in your project build file
+    ```groovy
+    compile('com.haulmont.scripting:spring-script-repositories:0.1-SNAPSHOT')
+    ```
+    Please note that the library's jar file should be placed near application jar files. 
+    E.g. if you use tomcat, please put this file to deployed application's WEB-INF/lib folder not to tomcat shared libs. 
+    We need it to use a correct classloader for proxy creation.
+     
+2. Define script repository interfaces 
+    ```java
+    @ScriptRepository
+    public interface CustomerScriptRepository {
+    
+        @ScriptMethod
+        String renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
+    
+        @ScriptMethod
+        Customer createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
+    }
+    ```
+    You can use default implementations in repository interfaces if you want to start quickly without writing scripts for methods.
+    
+3. Define root folder where your scripts will be located by defining ```script.source.root.path``` property in
+```application.properties``` file:
+    ```properties
+    script.source.root.path=classpath:scripts
+    ```
+4. Implement scripts that should be executed and save them in script source root folder. By default, they should be named using pattern 
+```InterfaceName.methodName.groovy```. So for the example described in p. 2 there will be two files:
+    1. ```CustomerScriptRepository.renameCustomer.groovy```
+    2. ```CustomerScriptRepository.createCustomer.groovy```
+    In your scripts you can use parameters defined in interface's method signatures, parameter names should match those 
+    defined in ```@ScriptParam``` annotation. For example, for method ```createCustomer``` script may look like the following:
+    ```groovy
+    Customer c = new Customer()
+    c.setId(UUID.randomUUID())
+    c.setName(name)
+    c.setBirthDate(birthDate)
+    return c
+    ```
+    Parameters ```name``` and ```birthdate``` will be substituted based on values passed by a caller. 
+    
+5. Enable scripting repositories in your application by adding ```@EnableScriptRepositories``` annotation to your 
+application configuration and specify path list where your repository interfaces are located.
+    ```java
+    @Configuration
+    @EnableScriptRepositories(basePackages = {"com.example", "com.sample"})
+    public class ExampleConfig {
+    }
+    ```
+6. Inject the interface into proper services and use it as "regular" bean.
+    ```java
+    public class CustomerService {
+        
+        @Autowired
+        private CustomerScriptRepository customerScriptRepository;
+    
+    	public Customer createNew(String name, Date birthDate) {
+ 	         return customerScriptRepository.createCustomer(name, birthDate);
+    	}    
+    }
+
+    ```     
+So it should be pretty easy to get started with the library. 
+By default, it supports groovy scripts, but it is quite easy to add any scripting language to it. Below is the 
+explanation of the library's internals and configuration.  
+
+##Internals 
+The library provides the following:
 
 Marker annotation for script repostitory interfaces.   
  ```java
@@ -28,12 +99,11 @@ public @interface ScriptRepository {
  bean and script executor bean. 
  ```java
 public @interface ScriptMethod {
-    String providerBeanName() default "appResourceProvider";
+    String providerBeanName() default "groovyResourceProvider";
     String executorBeanName() default "groovyJsrExecutor";
     String description() default "";
 }
 ```
-
 Interface for script provider:
 ```java
 public interface ScriptProvider {
@@ -41,8 +111,7 @@ public interface ScriptProvider {
 }
 ```
 The implementation should be able to find script source text based on scripted method's signature. As an example, the
-library provides a default implementation ```GroovyScriptFileProvider``` for a provider that reads text files from a classpath. File name should 
-have the same name as a method and the file should have ```.groovy``` extension.
+library provides a default implementation ```GroovyScriptFileProvider``` for a provider that reads text files from a source root. 
 
 Interface for script executor:
 ```java
@@ -64,38 +133,17 @@ public @interface ScriptParam {
 ``` 
 ## Implementation
 The library creates dynamic proxies for repository interfaces marked with ```@ScriptRepository``` annotation. All methods 
-in this repository must be marked with ```@ScriptMethod```, default methods are not allowed. All interfaces marked 
-with ```@ScriptRepository``` annotations will be published in spring's context and can be injected into other spring beans. 
+in this repository must be marked with ```@ScriptMethod```. All interfaces marked with ```@ScriptRepository``` annotation
+ will be published in Spring's context and can be injected into other spring beans. 
 
 When an interface method is called, the proxy invokes provider to get method script text and then executor to evaluate 
 the result.
 
-#Usage
-Specify library dependency in your project build file:
-
-```groovy
-        compile('com.haulmont.scripting:spring-script-repositories:0.1-SNAPSHOT')
-```
- 
 ## Configuration 
-If you want to use default provider and executor then you need to import XML config from the library into your project. Add the following line to your Spring configuration:
-
-```xml
-    <import resource="classpath:com/haulmont/scripting/repository/**/script-repositories-config.xml"/>
-```
-Please note that library jar file should be placed near application jar files. E.g. if you use tomcat, please put this file to deployed application's WEB-INF/lib folder not to tomcat shared libs. We need it to use a proper classloader for proxy creation. 
 
 In the project itself you can use two configuration options: annotations and XML. 
 
 ### Annotations configuration
-To tell spring to search for script repositories you need to add ```@EnableSpringRepositories``` annotation to one of the 
-configuration classes. For this annotation you need to specify array of package names that should be scanned.
-```java
-@Configuration
-@EnableScriptRepositories(basePackages = {"com.example", "com.sample"})
-public class ExampleConfig {
-}
-```
 If you plan to use your own implementation for script provider and/or script executor (e.g. for JavaScript), you can specify 
 their spring bean names in ```@ScriptMethod``` annotation:
 ```java

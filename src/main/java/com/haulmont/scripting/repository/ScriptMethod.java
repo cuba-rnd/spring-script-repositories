@@ -25,7 +25,7 @@ public @interface ScriptMethod {
      * Spring bean that returns script text.
      * @return bean name.
      */
-    String providerBeanName() default "appResourceProvider";
+    String providerBeanName() default "groovyResourceProvider";
 
     /**
      * Spring bean name that will execute script returned by provider.

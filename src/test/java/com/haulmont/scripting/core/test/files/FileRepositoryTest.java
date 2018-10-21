@@ -90,11 +90,11 @@ public class FileRepositoryTest {
     @Test(expected = UnsupportedOperationException.class)
     public void testErrorMethodExecution() {
         String errorLine = repo.getDefaultError();
-        fail("Non-default method without an underlying script must throw an error");
+        fail("Non-default method without an underlying script must throw an error instead of returning result: "+errorLine);
     }
 
     @Test
-    public void testResourceBasedScript(){
+    public void testZeroArgScript(){
         String hello = repo.sayHello();
         assertEquals("Hello!", hello);
     }

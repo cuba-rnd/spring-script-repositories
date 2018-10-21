@@ -1,12 +1,18 @@
 package com.haulmont.scripting.repository.executor;
 
+/**
+ * Wrapper for script execution result. Contains result object (null in case of execution error),
+ * execution status and execution error (if any).
+ *
+ * @param <T> script execution result type.
+ */
 public class ScriptResult<T> {
 
-    private T value;
+    private final T value;
 
-    private ExecutionStatus status;
+    private final ExecutionStatus status;
 
-    private Throwable error;
+    private final Throwable error;
 
     public ScriptResult(T value, ExecutionStatus status, Throwable error) {
         this.value = value;
