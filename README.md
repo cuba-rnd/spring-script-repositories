@@ -40,11 +40,13 @@ To start working with the script repositories, you need to do the following:
     ```
     You can use default implementations in repository interfaces if you want to start quickly without writing scripts for methods.
     
-3. Define root folder where your scripts will be located by defining ```script.source.root.path``` property in
+3. Define root folder where your scripts will be located by defining ```groovy.script.source.root.path``` property in
 ```application.properties``` file:
     ```properties
-    script.source.root.path=classpath:scripts
+    groovy.script.source.root.path=classpath:scripts
     ```
+    Prefixes ```classpath:```, ```file:```, ```jar:``` can be used.
+    
 4. Implement scripts that should be executed and save them in script source root folder. By default, they should be named using pattern 
 ```InterfaceName.methodName.groovy```. So for the example described in p. 2 there will be two files:
     1. ```CustomerScriptRepository.renameCustomer.groovy```
