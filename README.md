@@ -45,7 +45,8 @@ To start working with the script repositories, you need to do the following:
     ```properties
     groovy.script.source.root.path=classpath:scripts
     ```
-    Prefixes ```classpath:```, ```file:```, ```jar:``` can be used.
+    Prefixes ```classpath:```, ```file:```, ```jar:``` can be used. If source root path is not specified, 
+    the library will use default value: ```classpath:com/haulmont/scripting/scripts```
     
 4. Implement scripts that should be executed and save them in script source root folder. By default, they should be named using pattern 
 ```InterfaceName.methodName.groovy```. So for the example described in p. 2 there will be two files:
