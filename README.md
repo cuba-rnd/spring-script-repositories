@@ -88,7 +88,7 @@ So it should be pretty easy to get started with the library.
 By default, it supports groovy scripts, but it is quite easy to add any scripting language to it. Below is the 
 explanation of the library's internals and configuration.  
 
-##Internals 
+##Internals
 The library provides the following:
 
 Marker annotation for script repostitory interfaces.   
