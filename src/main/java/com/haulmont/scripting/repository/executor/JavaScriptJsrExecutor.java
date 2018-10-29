@@ -5,10 +5,10 @@ import org.springframework.stereotype.Component;
 /**
  * Evaluates Groovy script using JSR-223 javax.script API and bindings.
  */
-@Component("groovyJsrExecutor")
-public class GroovyScriptJsrExecutor extends Jsr233Executor {
+@Component("javaScriptJsrExecutor")
+public class JavaScriptJsrExecutor extends Jsr233Executor {
 
     protected String getEngineName() {
-        return "groovy";
+        return "javascript";
     }
 }
