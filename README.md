@@ -52,6 +52,7 @@ To start working with the script repositories, you need to do the following:
 ```InterfaceName.methodName.groovy```. So for the example described in p. 2 there will be two files:
     1. ```CustomerScriptRepository.renameCustomer.groovy```
     2. ```CustomerScriptRepository.createCustomer.groovy```
+    
     In your scripts you can use parameters defined in interface's method signatures, parameter names should match those 
     defined in ```@ScriptParam``` annotation. For example, for method ```createCustomer``` script may look like the following:
     ```groovy
@@ -88,7 +89,8 @@ So it should be pretty easy to get started with the library.
 By default, it supports groovy scripts, but it is quite easy to add any scripting language to it. Below is the 
 explanation of the library's internals and configuration.  
 
-##Internals
+## Internals
+
 The library provides the following:
 
 Marker annotation for script repostitory interfaces.   
@@ -134,6 +136,9 @@ public @interface ScriptParam {
     String value();
 }
 ``` 
+### More examples
+You can find examples in test classes. They include custom script provider and custom annotation configuration.  
+
 ## Implementation
 The library creates dynamic proxies for repository interfaces marked with ```@ScriptRepository``` annotation. All methods 
 in this repository must be marked with ```@ScriptMethod```. All interfaces marked with ```@ScriptRepository``` annotation
@@ -191,45 +196,6 @@ You can also configure both package scanning and custom annotations using XML in
 ### Mixed configuration
 In case of mixed configuration - Annotations+XML, config parameters will be merged, therefore it is not recommended 
 to configure the same custom annotation in two places because one of the configuration will override another.  
-
-## Usage 
-Let's assume that we use scripting library for customer management. In the simplest case script repository 
-interface may look like this:
-```java
-@ScriptRepository
-public interface CustomerScriptRepository {
-
-    @ScriptMethod
-    String renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
-}
-```
-Then you need to create ```renameCustomer.groovy``` file and put it to the same package where the interface is located.
-The script should use two parameters and return string. 
-
-As an example:
-```groovy
-return "Customer with ${customerId} was renamed to ${newName}".toString()
-``` 
-
-That's almost it. After this you should enable script repositories feature using annotations or XML. After that you can use 
-the repository above by injecting it to a bean and call its methods:
-
-```java
-public class CustomerService {
-
-    private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
-
-    @Autowired
-    private CustomerScriptRepository repo;
-    
-    public String doRename(Customer c, String newName) {
-        return repo.renameCustomer(c.getId(), newname);
-    }
-    
-}
-```
-### More examples
-You can find examples in test classes. They include custom script provider and custom annotation configuration.  
 
 ### References and thanks
 There is a good [article](https://zeroturnaround.com/rebellabs/scripting-your-java-application-with-groovy/) by [Anton Arhipov](https://github.com/antonarhipov) that helped us a lot with implementation of this library.
