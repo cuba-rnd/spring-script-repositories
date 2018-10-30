@@ -1,5 +1,6 @@
 package com.haulmont.scripting.core.test.files;
 
+import com.haulmont.scripting.repository.GroovyScript;
 import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptParam;
 import com.haulmont.scripting.repository.ScriptRepository;
@@ -24,7 +25,7 @@ public interface CustomerScriptRepository {
     @ScriptMethod
     String getDefaultError();
 
-    @ScriptMethod
+    @GroovyScript
     String sayHello();
 
 }

@@ -53,8 +53,9 @@ public class JsRepositoryTest {
 
     @Test
     public void testSimpleMath() {
-        int result = repo.simpleMath(1, 2);
-        assertEquals(3, result);
+        double result = repo.simpleMath(1.1, 2.1);
+        log.trace("JS result: {}", result);
+        assertTrue(Math.abs(3.2 - result) < 0.0001);
     }
 
 }
