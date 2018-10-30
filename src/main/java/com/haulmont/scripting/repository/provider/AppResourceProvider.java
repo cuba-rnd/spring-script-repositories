@@ -2,14 +2,17 @@ package com.haulmont.scripting.repository.provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.util.ResourceUtils;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
-import java.nio.file.Files;
+import java.util.stream.Collectors;
 
 /**
  * Loads script text from application using {@link ResourceUtils#getFile(String)} class.
@@ -19,6 +22,8 @@ public abstract class AppResourceProvider implements ScriptProvider {
 
     private static final Logger log = LoggerFactory.getLogger(AppResourceProvider.class);
 
+    private DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+
     /**
      * {@inheritDoc}
      */
@@ -27,10 +32,15 @@ public abstract class AppResourceProvider implements ScriptProvider {
         String path = getResourcePath(method);
         log.debug("Getting file from resource {}", path);
         try {
-            File f =  ResourceUtils.getFile(path);
-            String text = String.join(System.lineSeparator(), Files.readAllLines(f.toPath(), StandardCharsets.UTF_8));
-            log.trace("Script found. Script text is:\n{}\n", text);
-            return new ScriptSource(text, SourceStatus.FOUND, null);
+            Resource res = resourceLoader.getResource(path);
+            if (res.exists()){
+                BufferedReader reader = new BufferedReader(new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8));
+                String text = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+                log.trace("Script found. Script text is:\n{}\n", text);
+                return new ScriptSource(text, SourceStatus.FOUND, null);
+            } else {
+                throw new FileNotFoundException(String.format("File %s does not exists", path));
+            }
         } catch (FileNotFoundException | AccessDeniedException e) {
             return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
         } catch (Exception e) {

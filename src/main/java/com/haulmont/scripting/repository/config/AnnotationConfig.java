@@ -3,7 +3,7 @@ package com.haulmont.scripting.repository.config;
 import java.lang.annotation.Annotation;
 
 /**
- * Struct like class to hold scripted method data.
+ * Struct like class to hold scripted method data taken from annotation.
  */
 public class AnnotationConfig {
     public final Class<? extends Annotation> scriptAnnotation;

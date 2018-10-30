@@ -250,7 +250,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                     return executeDefaultMethod(method, args, repositoryClass);
                 } else {
                     throw new UnsupportedOperationException(
-                            String.format("Method %s should have either script implementation or be default", method));
+                            String.format("Method %s should have either script implementation or be default", method), script.getError());
                 }
             } else {
                 Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
