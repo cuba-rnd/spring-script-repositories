@@ -31,6 +31,11 @@ class CustomerImpl implements Customer{
     void setBirthDate(Date birthDate) {
         this.birthDate = birthDate
     }
+
+    @Override
+    List<String> getMyData() {
+        return [id.toString(), name, birthDate.toString()]
+    }
 }
 
 CustomerImpl c = new CustomerImpl()

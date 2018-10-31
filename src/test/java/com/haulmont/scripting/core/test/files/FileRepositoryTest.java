@@ -70,6 +70,9 @@ public class FileRepositoryTest {
         assertEquals(newName, c.getName());
         assertEquals(birthDate, c.getBirthDate());
         assertNotNull(c.getId());
+
+        assertEquals(Arrays.asList(c.getId().toString(), newName, birthDate.toString()), c.getMyData());
+
     }
 
     @Test
