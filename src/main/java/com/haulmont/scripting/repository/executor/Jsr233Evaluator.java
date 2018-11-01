@@ -20,7 +20,9 @@ import java.util.Map;
  */
 public abstract class Jsr233Evaluator implements ScriptEvaluator {
 
-    private static final Logger log = LoggerFactory.getLogger(GroovyScriptJsrValuator.class);
+    private static final Logger log = LoggerFactory.getLogger(Jsr233Evaluator.class);
+
+    private final ScriptEngineManager manager = new ScriptEngineManager();
 
 
     @Override
@@ -34,11 +36,13 @@ public abstract class Jsr233Evaluator implements ScriptEvaluator {
     }
 
     private Object eval(ScriptSource script, Map<String, Object> parameters) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine scriptEngine = manager.getEngineByName(getEngineName());
+        String engineName = getEngineName();
+        ScriptEngine scriptEngine = manager.getEngineByName(engineName);
         log.trace("Script bindings: {}", parameters);
         try {
-            return scriptEngine.eval(script.getScriptAsString(), new SimpleBindings(parameters));
+            String scriptAsString = script.getScriptAsString();
+            log.trace("Script text ({}): \n {} \n", engineName, scriptAsString);
+            return scriptEngine.eval(scriptAsString, new SimpleBindings(parameters));
         } catch (IOException | ScriptException e) {
             throw new ScriptCompilationException("Error executing script", e);
         }
