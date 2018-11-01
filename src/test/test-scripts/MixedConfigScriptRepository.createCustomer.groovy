@@ -1,6 +1,6 @@
 import com.haulmont.scripting.core.test.files.Customer
 
-class CustomerImplMixed implements Customer{
+class CustomerImplMixed implements Customer {
 
     private UUID id
     private String name
@@ -28,6 +28,11 @@ class CustomerImplMixed implements Customer{
 
     void setBirthDate(Date birthDate) {
         this.birthDate = birthDate
+    }
+
+    @Override
+    List<String> getMyData() {
+        return [id.toString(), name, birthDate.toString()]
     }
 }
 

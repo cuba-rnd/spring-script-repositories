@@ -1,5 +1,7 @@
 package com.haulmont.scripting.repository.provider;
 
+import org.springframework.scripting.ScriptSource;
+
 import java.lang.reflect.Method;
 
 /**
@@ -13,6 +15,7 @@ public interface ScriptProvider {
      * core module to get scripts protected by row-level security.
      * @param method Script Repository interface method to be executed.
      * @return Script text associated with this method.
+     * @throws ScriptNotFoundException in case script text is not found.
      */
     ScriptSource getScript(Method method);
 

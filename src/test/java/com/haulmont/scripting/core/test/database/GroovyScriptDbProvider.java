@@ -1,15 +1,19 @@
 package com.haulmont.scripting.core.test.database;
 
+import com.haulmont.scripting.repository.provider.ScriptNotFoundException;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
-import com.haulmont.scripting.repository.provider.ScriptSource;
-import com.haulmont.scripting.repository.provider.SourceStatus;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.scripting.ScriptSource;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +27,7 @@ public class GroovyScriptDbProvider implements ScriptProvider {
     @Autowired
     private JDBCDataSource dataSource;
 
-    private String getScriptTextbyName(String name) throws Exception{
+    private String getScriptTextbyName(String name) throws SQLException {
         String result = "";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement st = conn.prepareStatement("select source_text from persistent_script where name = ?")){
@@ -47,11 +51,10 @@ public class GroovyScriptDbProvider implements ScriptProvider {
         try {
             script = getScriptTextbyName(scriptName);
             log.trace("Scripted method name: {} text: {}", scriptName, script);
-            return new ScriptSource(script, SourceStatus.FOUND, null);
+            Resource r = new ByteArrayResource(script.getBytes(StandardCharsets.UTF_8));
+            return new ResourceScriptSource(r);
         } catch (SQLException e) {
-            return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
-        } catch (Exception e) {
-            return new ScriptSource(null, SourceStatus.FAILURE, e);
+            throw new ScriptNotFoundException(e);
         }
     }
 }

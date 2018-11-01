@@ -4,23 +4,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
+import org.springframework.scripting.ScriptSource;
+import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.util.ResourceUtils;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AccessDeniedException;
 import java.util.stream.Collectors;
 
 /**
  * Loads script text from application using {@link ResourceUtils#getFile(String)} class.
  * Allows you to define your own way of building resource path based on method signature.
  */
-public abstract class AppResourceProvider implements ScriptProvider {
+public abstract class AbstractResourceProvider implements ScriptProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(AppResourceProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractResourceProvider.class);
 
     private DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -31,20 +32,17 @@ public abstract class AppResourceProvider implements ScriptProvider {
     public ScriptSource getScript(Method method) {
         String path = getResourcePath(method);
         log.debug("Getting file from resource {}", path);
-        try {
-            Resource res = resourceLoader.getResource(path);
-            if (res.exists()){
-                BufferedReader reader = new BufferedReader(new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8));
+        Resource res = resourceLoader.getResource(path);
+        if (res.exists()){
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8))) {
                 String text = reader.lines().collect(Collectors.joining(System.lineSeparator()));
                 log.trace("Script found. Script text is:\n{}\n", text);
-                return new ScriptSource(text, SourceStatus.FOUND, null);
-            } else {
-                throw new FileNotFoundException(String.format("File %s does not exists", path));
+                return new ResourceScriptSource(res);
+            } catch (IOException ex) {
+                throw new ScriptNotFoundException(ex);
             }
-        } catch (FileNotFoundException | AccessDeniedException e) {
-            return new ScriptSource(null, SourceStatus.NOT_FOUND, e);
-        } catch (Exception e) {
-            return new ScriptSource(null, SourceStatus.FAILURE, e);
+        } else {
+            throw new ScriptNotFoundException(String.format("Resource %s does not exists", path));
         }
     }
 

@@ -6,9 +6,8 @@ import com.haulmont.scripting.repository.config.AnnotationConfig;
 import com.haulmont.scripting.repository.executor.ExecutionStatus;
 import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.executor.ScriptResult;
+import com.haulmont.scripting.repository.provider.ScriptNotFoundException;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
-import com.haulmont.scripting.repository.provider.ScriptSource;
-import com.haulmont.scripting.repository.provider.SourceStatus;
 import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.scripting.ScriptSource;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -238,24 +238,11 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
             ScriptInvocationMetadata invocationInfo = getMethodInvocationInfo(method);
 
-            ScriptSource script = invocationInfo.getProvider().getScript(method);
-
-            if (script.getStatus() == SourceStatus.FAILURE) {
-                throw script.getError();
-            }
-
-            if (script.getStatus() == SourceStatus.NOT_FOUND) {
-                //Try to execute default method
-                if (method.isDefault()) {
-                    return executeDefaultMethod(method, args, repositoryClass);
-                } else {
-                    throw new UnsupportedOperationException(
-                            String.format("Method %s should have either script implementation or be default", method), script.getError());
-                }
-            } else {
+            try {
+                ScriptSource script = invocationInfo.getProvider().getScript(method);
                 Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
                 try {
-                    Object scriptResult = invocationInfo.getExecutor().eval(script.getSource(), binds);
+                    Object scriptResult = invocationInfo.getExecutor().eval(script.getScriptAsString(), binds);
                     if (shouldWrapResult(invocationInfo)) {
                         return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
                     }
@@ -266,7 +253,17 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                     }
                     throw ex;
                 }
+            } catch (ScriptNotFoundException e) {
+                if (method.isDefault()) {
+                    return executeDefaultMethod(method, args, repositoryClass);
+                } else {
+                    throw new UnsupportedOperationException(
+                            String.format("Method %s should have either script implementation or be default", method), e);
+                }
+            } catch (Exception e) {
+                throw e;
             }
+
         }
 
         private boolean shouldWrapResult(ScriptInvocationMetadata invocationInfo) {

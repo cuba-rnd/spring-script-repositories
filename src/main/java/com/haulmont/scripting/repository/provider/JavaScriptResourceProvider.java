@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
  * Provider for groovy scripts stored in application resources.
  */
 @Component("javaScriptResourceProvider")
-public class JavaScriptResourceProvider extends AppResourceProvider {
+public class JavaScriptResourceProvider extends AbstractResourceProvider {
 
     @Value("${js.script.source.root.path}")
     private String rootPath;
