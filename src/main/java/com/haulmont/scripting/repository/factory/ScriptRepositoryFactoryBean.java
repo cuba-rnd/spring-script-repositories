@@ -4,7 +4,6 @@ import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
 import com.haulmont.scripting.repository.executor.ExecutionStatus;
-import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.executor.ScriptResult;
 import com.haulmont.scripting.repository.provider.ScriptNotFoundException;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
@@ -25,6 +24,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
 
 import java.io.Serializable;
@@ -242,7 +242,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 ScriptSource script = invocationInfo.getProvider().getScript(method);
                 Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
                 try {
-                    Object scriptResult = invocationInfo.getExecutor().eval(script.getScriptAsString(), binds);
+                    Object scriptResult = invocationInfo.getExecutor().evaluate(script, binds);
                     if (shouldWrapResult(invocationInfo)) {
                         return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
                     }
@@ -284,7 +284,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 log.trace("Script annotation class name: {}, provider: {}, executor: {}",
                         annotationConfig.scriptAnnotation.getName(), annotationConfig.provider, annotationConfig.executor);
                 ScriptProvider provider = ctx.getBean(annotationConfig.provider, ScriptProvider.class);
-                ScriptExecutor executor = ctx.getBean(annotationConfig.executor, ScriptExecutor.class);
+                ScriptEvaluator executor = ctx.getBean(annotationConfig.executor, ScriptEvaluator.class);
                 return new ScriptInvocationMetadata(m, annotationConfig.provider, provider, annotationConfig.executor, executor);
             });
         }
@@ -319,7 +319,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             if (annotationConfig != null) { //If method is configured with custom annotation annotated with ScriptMethod
                 return new AnnotationConfig(ScriptMethod.class,
                         annotationConfig.providerBeanName(),
-                        annotationConfig.executorBeanName(),
+                        annotationConfig.evaluatorBeanName(),
                         annotationConfig.description());
             } else { //Annotation is configured in XML
                 Annotation[] methodAnnotations = method.getAnnotations();

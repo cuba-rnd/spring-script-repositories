@@ -14,7 +14,7 @@
         <repo:annotations-config>
             <repo:annotation-mapping annotation-class="com.haulmont.scripting.core.test.mixed.XmlGroovyScript"
                                      provider-bean-name="groovyResourceProvider"
-                                     executor-bean-name="groovyJsrExecutor"/>
+                                     executor-bean-name="groovyJsrEvaluator"/>
         </repo:annotations-config>
     </repo:script-repositories>
 

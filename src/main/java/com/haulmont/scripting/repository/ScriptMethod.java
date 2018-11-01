@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * Annotation that should be used to mark interface methods as available for scripting.
  * Also this annotation can be used as meta-annotation for custom annotations for scripted methods, e.g.
  * <pre>
- * &#64;ScriptMethod(providerBeanName="sqlScriptProvider", executorBeanName="sqlScriptExecutor")
+ * &#64;ScriptMethod(providerBeanName="sqlScriptProvider", evaluatorBeanName="sqlScriptExecutor")
  * public @interface SqlScriptMethod {...}
  * </pre>
  * Then annotation SqlScriptMethod can be used in code.
@@ -31,7 +31,7 @@ public @interface ScriptMethod {
      * Spring bean name that will execute script returned by provider.
      * @return bean name.
      */
-    String executorBeanName() default "groovyJsrExecutor";
+    String evaluatorBeanName() default "groovyJsrEvaluator";
 
     /**
      * Optional description for script, can be used for auto-generated documentation of all scripted extensions in the application.
