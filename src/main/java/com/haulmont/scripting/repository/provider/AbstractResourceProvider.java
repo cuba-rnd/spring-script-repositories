@@ -8,12 +8,7 @@ import org.springframework.scripting.ScriptSource;
 import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.util.ResourceUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 
 /**
  * Loads script text from application using {@link ResourceUtils#getFile(String)} class.
@@ -31,16 +26,10 @@ public abstract class AbstractResourceProvider implements ScriptProvider {
     @Override
     public ScriptSource getScript(Method method) {
         String path = getResourcePath(method);
-        log.debug("Getting file from resource {}", path);
+        log.debug("Getting script from resource {}", path);
         Resource res = resourceLoader.getResource(path);
         if (res.exists()){
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8))) {
-                String text = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-                log.trace("Script found. Script text is:\n{}\n", text);
-                return new ResourceScriptSource(res);
-            } catch (IOException ex) {
-                throw new ScriptNotFoundException(ex);
-            }
+            return new ResourceScriptSource(res);
         } else {
             throw new ScriptNotFoundException(String.format("Resource %s does not exists", path));
         }
