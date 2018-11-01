@@ -1,8 +1,8 @@
 package com.haulmont.scripting.repository.factory;
 
 import com.haulmont.scripting.repository.ScriptParam;
-import com.haulmont.scripting.repository.executor.ScriptExecutor;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
+import org.springframework.scripting.ScriptEvaluator;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -20,9 +20,9 @@ public class ScriptInvocationMetadata {
     private final String providerName;
     private final ScriptProvider provider;
     private final String executorName;
-    private final ScriptExecutor executor;
+    private final ScriptEvaluator executor;
 
-    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String executorName, ScriptExecutor executor) {
+    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String executorName, ScriptEvaluator executor) {
         this.method = method;
         this.providerName = providerName;
         this.provider = provider;
@@ -79,7 +79,7 @@ public class ScriptInvocationMetadata {
         return executorName;
     }
 
-    public ScriptExecutor getExecutor() {
+    public ScriptEvaluator getExecutor() {
         return executor;
     }
 }

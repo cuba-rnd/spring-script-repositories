@@ -105,7 +105,7 @@ public @interface ScriptRepository {
  ```java
 public @interface ScriptMethod {
     String providerBeanName() default "groovyResourceProvider";
-    String executorBeanName() default "groovyJsrExecutor";
+    String executorBeanName() default "groovyJsrEvaluator";
     String description() default "";
 }
 ```

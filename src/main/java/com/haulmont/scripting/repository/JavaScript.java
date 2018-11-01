@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-@ScriptMethod(providerBeanName = "javaScriptResourceProvider", executorBeanName = "javaScriptJsrExecutor")
+@ScriptMethod(providerBeanName = "javaScriptResourceProvider", evaluatorBeanName = "javaScriptJsrEvaluator")
 public @interface JavaScript {
 }
