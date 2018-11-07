@@ -9,21 +9,25 @@ public class AnnotationConfig {
     public final Class<? extends Annotation> scriptAnnotation;
     public final String provider;
     public final String executor;
+    public final long timeout;
     public final String description;
 
-    public AnnotationConfig(Class<? extends Annotation> scriptAnnotation, String provider, String executor, String description) {
+    public AnnotationConfig(Class<? extends Annotation> scriptAnnotation, String provider, String executor, long timeout, String description) {
         this.scriptAnnotation = scriptAnnotation;
         this.provider = provider;
         this.executor = executor;
+        this.timeout = timeout;
         this.description = description;
     }
 
     @Override
     public String toString() {
         return "AnnotationConfig{" +
-                "scriptAnnotation=" + scriptAnnotation.getName() +
+                "scriptAnnotation=" + scriptAnnotation +
                 ", provider='" + provider + '\'' +
                 ", executor='" + executor + '\'' +
+                ", timeout=" + timeout +
+                ", description='" + description + '\'' +
                 '}';
     }
 }

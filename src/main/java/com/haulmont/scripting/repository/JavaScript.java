@@ -14,4 +14,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @ScriptMethod(providerBeanName = "javaScriptResourceProvider", evaluatorBeanName = "javaScriptJsrEvaluator")
 public @interface JavaScript {
+
+    long timeout() default -1;
+
 }

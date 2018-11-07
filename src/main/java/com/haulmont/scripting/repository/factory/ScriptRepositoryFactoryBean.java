@@ -38,7 +38,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -238,37 +243,68 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
 
             ScriptInvocationMetadata invocationInfo = getMethodInvocationInfo(method);
 
+            ScriptSource script = null;
+
             try {
-                ScriptSource script = invocationInfo.getProvider().getScript(method);
-                Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
-                try {
-                    Object scriptResult = invocationInfo.getExecutor().evaluate(script, binds);
-                    if (shouldWrapResult(invocationInfo)) {
-                        return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
-                    }
-                    return scriptResult;
-                } catch (Throwable ex) {
-                    if (shouldWrapResult(invocationInfo)) {
-                        return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
-                    }
-                    throw ex;
-                }
+                script = invocationInfo.getProvider().getScript(method);
             } catch (ScriptNotFoundException e) {
-                if (method.isDefault()) {
-                    return executeDefaultMethod(method, args, repositoryClass);
-                } else {
+                if (!method.isDefault()) {
                     throw new UnsupportedOperationException(
                             String.format("Method %s should have either script implementation or be default", method), e);
                 }
-            } catch (Exception e) {
-                throw e;
             }
 
+            Callable<Object> callableTask;
+            final ScriptSource src = script;
+
+            if (src != null) {
+                log.trace("Executing scripted method {}", method);
+                callableTask = () -> {
+                    Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
+                    return executeScriptedMethod(invocationInfo, src, binds);
+                };
+            } else {
+                log.trace("Executing default method {}", method);
+                callableTask = () -> {
+                    return executeDefaultMethod(method, args, repositoryClass);
+                };
+            }
+
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+            try {
+                Long timeout = invocationInfo.getTimeout();
+                Future<Object> future = executorService.submit(callableTask);
+                log.trace("Submitting task for execution, timeout: {}", timeout);
+                if (timeout > 0) {
+                    return future.get(timeout, TimeUnit.MILLISECONDS);
+                } else {
+                    return future.get();
+                }
+            } catch (Throwable ex) {
+                log.error("Error executing scripted method", ex);
+                if (shouldWrapResult(invocationInfo)) {
+                    return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
+                }
+                throw ex;
+            } finally {
+                executorService.shutdownNow();
+            }
+
+
         }
 
-        private boolean shouldWrapResult(ScriptInvocationMetadata invocationInfo) {
-            return ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType());
+        private Object executeScriptedMethod(ScriptInvocationMetadata invocationInfo, ScriptSource script, Map<String, Object> binds) {
+            Object scriptResult;
+
+            scriptResult = invocationInfo.getExecutor().evaluate(script, binds);
+
+            if (shouldWrapResult(invocationInfo)) {
+                return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
+            }
+            return scriptResult;
         }
+
 
         /**
          * Creates method invocation info metadata and puts it to cache.
@@ -285,7 +321,10 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                         annotationConfig.scriptAnnotation.getName(), annotationConfig.provider, annotationConfig.executor);
                 ScriptProvider provider = ctx.getBean(annotationConfig.provider, ScriptProvider.class);
                 ScriptEvaluator executor = ctx.getBean(annotationConfig.executor, ScriptEvaluator.class);
-                return new ScriptInvocationMetadata(m, annotationConfig.provider, provider, annotationConfig.executor, executor);
+                return new ScriptInvocationMetadata(m,
+                        annotationConfig.provider, provider,
+                        annotationConfig.executor, executor,
+                        annotationConfig.timeout);
             });
         }
 
@@ -315,25 +354,55 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
          * @throws BeanCreationException if method is neither annotated nor configured.
          */
         private AnnotationConfig getAnnotationConfig(Method method) throws BeanCreationException {
+
+            //Getting timeout from method's direct (1st level) annotations
+            //Timeout specified at 1st level annotations will prevail over indirect one,
+            //In absence of direct timeout we need to check
+            // if we have indirect timeout set in @ScriptMethod or in XML config
+            Long methodTimeout = getTimeout(method);
+
             ScriptMethod annotationConfig = AnnotationUtils.getAnnotation(method, ScriptMethod.class);
+
             if (annotationConfig != null) { //If method is configured with custom annotation annotated with ScriptMethod
+
+                Long timeout = methodTimeout != null ? methodTimeout : annotationConfig.timeout();
+
                 return new AnnotationConfig(ScriptMethod.class,
                         annotationConfig.providerBeanName(),
                         annotationConfig.evaluatorBeanName(),
+                        timeout,
                         annotationConfig.description());
             } else { //Annotation is configured in XML
                 Annotation[] methodAnnotations = method.getAnnotations();
-                Set<Class<? extends Annotation>> annotClasses = Arrays.stream(methodAnnotations)
+
+                Class<?> annotation = Arrays
+                        .stream(methodAnnotations)
                         .map(Annotation::annotationType)
-                        .collect(Collectors.toSet());
-                Class<?> annotation = annotClasses.stream()
                         .filter(customAnnotationsConfig.keySet()::contains)
                         .findAny()
                         .orElseThrow(() -> new BeanCreationException(
                                 String.format("A method %s is not a scripted method. Annotation is not configured in XML"
                                         , method.getName())));
-                return customAnnotationsConfig.get(annotation);
+
+                AnnotationConfig annotationXmlConfig = customAnnotationsConfig.get(annotation);
+
+                Long timeout = methodTimeout != null ? methodTimeout : annotationXmlConfig.timeout;
+
+                return new AnnotationConfig(ScriptMethod.class,
+                        annotationXmlConfig.provider,
+                        annotationXmlConfig.executor,
+                        timeout,
+                        annotationXmlConfig.description);
             }
+        }
+
+        private Long getTimeout(Method method) {
+            return Arrays.stream(AnnotationUtils.getAnnotations(method))
+                    .filter(ann -> AnnotationUtils.getAnnotationAttributes(ann).containsKey("timeout"))
+                    .map(ann -> Long.parseLong(String.valueOf(AnnotationUtils.getValue(ann, "timeout"))))
+                    .filter(value -> value > 0L)
+                    .min(Long::compareTo)
+                    .orElse(null);
         }
 
         /**
@@ -359,6 +428,9 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             }
         }
 
+        private boolean shouldWrapResult(ScriptInvocationMetadata invocationInfo) {
+            return ScriptResult.class.isAssignableFrom(invocationInfo.getMethod().getReturnType());
+        }
 
     }
 

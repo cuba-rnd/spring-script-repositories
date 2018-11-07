@@ -21,13 +21,15 @@ public class ScriptInvocationMetadata {
     private final ScriptProvider provider;
     private final String executorName;
     private final ScriptEvaluator executor;
+    private final Long timeout;
 
-    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String executorName, ScriptEvaluator executor) {
+    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String executorName, ScriptEvaluator executor, Long timeout) {
         this.method = method;
         this.providerName = providerName;
         this.provider = provider;
         this.executorName = executorName;
         this.executor = executor;
+        this.timeout = timeout;
     }
 
     /**
@@ -81,5 +83,9 @@ public class ScriptInvocationMetadata {
 
     public ScriptEvaluator getExecutor() {
         return executor;
+    }
+
+    public Long getTimeout() {
+        return timeout;
     }
 }

@@ -77,8 +77,9 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
             String providerBeanName = el.getAttribute("provider-bean-name");
             String executorBeanName = el.getAttribute("executor-bean-name");
             String description = el.getAttribute("description");
+            long timeout = Long.parseLong(el.getAttribute("timeout"));
             Class<? extends Annotation> annotationClass = (Class<? extends Annotation>)Class.forName(el.getAttribute("annotation-class"));
-            result.put(annotationClass, new AnnotationConfig(annotationClass, providerBeanName, executorBeanName, description));
+            result.put(annotationClass, new AnnotationConfig(annotationClass, providerBeanName, executorBeanName, timeout, description));
         }
         return result;
     }

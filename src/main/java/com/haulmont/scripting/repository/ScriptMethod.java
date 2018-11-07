@@ -34,6 +34,12 @@ public @interface ScriptMethod {
     String evaluatorBeanName() default "groovyJsrEvaluator";
 
     /**
+     * Method execution timeout in milliseconds, no timeout by default.
+     * @return execution timeout, negative value if timeout is not set.
+     */
+    long timeout() default -1L;
+
+    /**
      * Optional description for script, can be used for auto-generated documentation of all scripted extensions in the application.
      * @return description string.
      */

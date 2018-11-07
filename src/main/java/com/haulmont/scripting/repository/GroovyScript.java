@@ -14,4 +14,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @ScriptMethod
 public @interface GroovyScript {
+
+    long timeout() default -1;
+
 }

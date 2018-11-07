@@ -78,9 +78,10 @@ public class FileRepositoryTest {
     @Test
     public void testScriptMetadata() {
         List<ScriptInvocationMetadata> scripsMetadata = scriptRepositoryFactoryBean.getMethodInvocationsInfo();
-        assertEquals(5, scripsMetadata.size());
+        assertEquals(6, scripsMetadata.size());
         List<String> methods = scripsMetadata.stream().map(info -> info.getMethod().getName()).collect(Collectors.toList());
-        assertTrue(methods.containsAll(Arrays.asList("renameCustomer", "createCustomer", "getDefaultName", "getDefaultError", "sayHello")));
+        assertTrue(methods.containsAll(
+                Arrays.asList("renameCustomer", "createCustomer", "getDefaultName", "getDefaultError", "sayHello", "printData")));
     }
 
     @Test
@@ -100,6 +101,16 @@ public class FileRepositoryTest {
     public void testZeroArgScript(){
         String hello = repo.sayHello();
         assertEquals("Hello!", hello);
+    }
+
+    @Test
+    public void testVoidMethods() {
+        repo.printData("Test Data ");
+    }
+
+    @Test
+    public void testVoidNullParamsMethods() {
+        repo.printData(null);
     }
 
 }
