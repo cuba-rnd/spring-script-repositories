@@ -4,6 +4,7 @@ import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
 import com.haulmont.scripting.repository.executor.ExecutionStatus;
+import com.haulmont.scripting.repository.executor.ScriptExecutionException;
 import com.haulmont.scripting.repository.executor.ScriptResult;
 import com.haulmont.scripting.repository.provider.ScriptNotFoundException;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
@@ -24,7 +25,6 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
 
@@ -39,13 +39,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static com.haulmont.scripting.repository.config.ScriptRepositoriesAutoConfiguration.THREAD_POOL_NAME;
 
 /**
  * Class that creates proxies for script repositories based on configuration data. Proxies will forward script repository interface method
@@ -236,61 +233,51 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
          */
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
             if (!isScriptedMethod(method)) {
                 return method.invoke(defaultDelegate, args);
             }
-            log.debug("Class: {}, Proxy: {}, Method: {}, Args: {}",
-                    method.getDeclaringClass().getName(), proxy.getClass(), method.getName(), args);
 
             ScriptInvocationMetadata invocationInfo = getMethodInvocationInfo(method);
 
-            ScriptSource script = null;
+            Long timeout = invocationInfo.getTimeout();
+            log.trace("Submitting task for execution, timeout: {} method: {}", timeout, method);
 
             try {
-                script = invocationInfo.getProvider().getScript(method);
+                CompletableFuture<Object> completableFuture =
+                        CompletableFuture.supplyAsync(() -> doInvoke(proxy, method, args, invocationInfo));
+                if (timeout > 0) {
+                    return completableFuture
+                            .get(timeout, TimeUnit.MILLISECONDS);
+                } else {
+                    return completableFuture
+                            .get();
+                }
+            } catch (Throwable ex) {
+                ScriptExecutionException executionException = new ScriptExecutionException("Error during script execution", ex);
+                if (shouldWrapResult(invocationInfo)) {
+                    return new ScriptResult<>(null, ExecutionStatus.FAILURE, executionException);
+                }
+                throw executionException;
+            }
+
+
+        }
+
+        private Object doInvoke(Object proxy, Method method, Object[] args, ScriptInvocationMetadata invocationInfo) {
+            log.debug("Class: {}, Proxy: {}, Method: {}, Args: {}",
+                    method.getDeclaringClass().getName(), proxy.getClass(), method.getName(), args);
+            try {
+                ScriptSource script = invocationInfo.getProvider().getScript(method);
+                Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
+                return executeScriptedMethod(invocationInfo, script, binds);
             } catch (ScriptNotFoundException e) {
                 if (!method.isDefault()) {
                     throw new UnsupportedOperationException(
                             String.format("Method %s should have either script implementation or be default", method), e);
                 }
+                return executeDefaultMethod(method, args, repositoryClass);
             }
-
-            Callable<Object> callableTask;
-            final ScriptSource src = script;
-
-            if (src != null) {
-                log.trace("Executing scripted method {}", method);
-                callableTask = () -> {
-                    Map<String, Object> binds = invocationInfo.createParameterMap(method, args);
-                    return executeScriptedMethod(invocationInfo, src, binds);
-                };
-            } else {
-                log.trace("Executing default method {}", method);
-                callableTask = () -> {
-                    return executeDefaultMethod(method, args, repositoryClass);
-                };
-            }
-
-            ThreadPoolTaskExecutor executorService = ctx.getBean(THREAD_POOL_NAME, ThreadPoolTaskExecutor.class);
-
-            try {
-                Long timeout = invocationInfo.getTimeout();
-                Future<Object> future = executorService.submit(callableTask);
-                log.trace("Submitting task for execution, timeout: {}", timeout);
-                if (timeout > 0) {
-                    return future.get(timeout, TimeUnit.MILLISECONDS);
-                } else {
-                    return future.get();
-                }
-            } catch (Throwable ex) {
-                log.error("Error executing scripted method", ex);
-                if (shouldWrapResult(invocationInfo)) {
-                    return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
-                }
-                throw ex;
-            }
-
-
         }
 
         private Object executeScriptedMethod(ScriptInvocationMetadata invocationInfo, ScriptSource script, Map<String, Object> binds) {
@@ -414,13 +401,13 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
          * @throws NoSuchMethodException in case default method is not found.
          * @link https://blog.jooq.org/2018/03/28/correct-reflective-access-to-interface-default-methods-in-java-8-9-10/
          */
-        private Object executeDefaultMethod(Method method, Object[] args, Class<?> interfaceClass) throws NoSuchMethodException {
+        private Object executeDefaultMethod(Method method, Object[] args, Class<?> interfaceClass) {
             try {
                 Object typedProxyWithDefaultMethod = Reflect.on(new Object()).as(interfaceClass);
                 Method defaultMethod = interfaceClass.
                         getMethod(method.getName(), method.getParameterTypes());
                 return defaultMethod.invoke(typedProxyWithDefaultMethod, args);
-            } catch (IllegalAccessException | InvocationTargetException e) {
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 throw new UnsupportedOperationException(String.format("Default method %s cannot be invoked on %s: %s"
                         , method.getName(), interfaceClass.getName(), e.getMessage())
                         , e);

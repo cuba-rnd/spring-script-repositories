@@ -1,5 +1,8 @@
 package com.haulmont.scripting.core.test.timeout;
 
+import com.haulmont.scripting.repository.executor.ExecutionStatus;
+import com.haulmont.scripting.repository.executor.ScriptExecutionException;
+import com.haulmont.scripting.repository.executor.ScriptResult;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Tested;
@@ -14,6 +17,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @ContextConfiguration(locations = {"classpath:com/haulmont/scripting/core/test/timeout/timeout-test-spring.xml"})
@@ -24,52 +28,29 @@ public class TimeoutTest {
     private TimeoutTestScriptRepository testScriptRepository;
 
     @Test//Timeout 1_000L
-    public void runShortMethod() {
+    public void runShortJob() {
         String result = testScriptRepository.doLongJob(100L);
         assertEquals(testScriptRepository.SUCCESS, result);
     }
 
-    @Test(expected = TimeoutException.class) //Timeout 1_000L
-    public void runLongMethod() throws Throwable {
-        try {
-            testScriptRepository.doLongJob(10_000L);
-        } catch (Throwable e) {
-            if (e.getCause() != null) {
-                throw e.getCause();
-            } else {
-                throw e;
-            }
-        }
+    @Test(expected = ScriptExecutionException.class) //Timeout 1_000L
+    public void runLongJob() {
+        testScriptRepository.doLongJob(10_000L);
         fail("Long-running methods must throw exception if timeout is set");
     }
 
 
-    @Test(expected = TimeoutException.class) //Timeout 100L
-    public void runLongMethodComposedDefault() throws Throwable {
-        try {
-            testScriptRepository.doAnotherLongJob(10_000L);
-        } catch (Throwable e) {
-            if (e.getCause() != null) {
-                throw e.getCause();
-            } else {
-                throw e;
-            }
-        }
-        fail("Long-running methods must throw exception if timeout is set");
+    @Test//Timeout 100L
+    public void runLongJobComposedTimeout() {
+        ScriptResult<String> result = testScriptRepository.doAnotherLongJob(10_000L);
+        assertEquals(ExecutionStatus.FAILURE, result.getStatus());
+        assertEquals(ScriptExecutionException.class, result.getError().getClass());
     }
 
 
-    @Test(expected = TimeoutException.class) //Timeout 1_000L
-    public void runLongMethodComposedWithTimeout() throws Throwable {
-        try {
-            testScriptRepository.doThirdLongJob(10_000L);
-        } catch (Throwable e) {
-            if (e.getCause() != null) {
-                throw e.getCause();
-            } else {
-                throw e;
-            }
-        }
+    @Test(expected = ScriptExecutionException.class) //Timeout 1_000L
+    public void runLongMethodComposedWithTimeout() {
+        testScriptRepository.doThirdLongJob(10_000L);
         fail("Long-running methods must throw exception if timeout is set");
     }
 
