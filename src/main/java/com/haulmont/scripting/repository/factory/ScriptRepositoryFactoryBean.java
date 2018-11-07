@@ -24,6 +24,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
 
@@ -40,11 +41,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.haulmont.scripting.repository.config.ScriptRepositoriesAutoConfiguration.THREAD_POOL_NAME;
 
 /**
  * Class that creates proxies for script repositories based on configuration data. Proxies will forward script repository interface method
@@ -270,7 +271,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                 };
             }
 
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            ThreadPoolTaskExecutor executorService = ctx.getBean(THREAD_POOL_NAME, ThreadPoolTaskExecutor.class);
 
             try {
                 Long timeout = invocationInfo.getTimeout();
@@ -287,8 +288,6 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                     return new ScriptResult<>(null, ExecutionStatus.FAILURE, ex);
                 }
                 throw ex;
-            } finally {
-                executorService.shutdownNow();
             }
 
 
