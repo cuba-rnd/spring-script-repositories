@@ -3,9 +3,10 @@ package com.haulmont.scripting.repository.factory;
 import com.haulmont.scripting.repository.ScriptMethod;
 import com.haulmont.scripting.repository.ScriptRepository;
 import com.haulmont.scripting.repository.config.AnnotationConfig;
-import com.haulmont.scripting.repository.executor.ExecutionStatus;
-import com.haulmont.scripting.repository.executor.ScriptExecutionException;
-import com.haulmont.scripting.repository.executor.ScriptResult;
+import com.haulmont.scripting.repository.evaluator.CancellableEvaluator;
+import com.haulmont.scripting.repository.evaluator.EvaluationStatus;
+import com.haulmont.scripting.repository.evaluator.ScriptEvaluationException;
+import com.haulmont.scripting.repository.evaluator.ScriptResult;
 import com.haulmont.scripting.repository.provider.ScriptNotFoundException;
 import com.haulmont.scripting.repository.provider.ScriptProvider;
 import org.joor.Reflect;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
 
 /**
  * Class that creates proxies for script repositories based on configuration data. Proxies will forward script repository interface method
- * invocations to get script text from providers and then for evaluation to actual executor class.
+ * invocations to get script text from providers and then for evaluation to actual evaluator class.
  * <p>
  * Factory scans packages and creates script repository proxies when context initialization is finished.
  *
@@ -146,7 +147,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
     }
 
     /**
-     * Sets application context - we'll need it to get provider and executor beans dynamically on method invocation.
+     * Sets application context - we'll need it to get provider and evaluator beans dynamically on method invocation.
      *
      * @see ApplicationContextAware#setApplicationContext(ApplicationContext)
      */
@@ -201,7 +202,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
     /**
      * Class that process all repository invocations. All method invocations that are not specific to script
      * repository interface (equals, hashcode, etc.) will be redirected to Object class instance created within the class.
-     * Scripted method invocation configuration (method, provider bean instance and executor bean instance) are cached.
+     * Scripted method invocation configuration (method, provider bean instance and evaluator bean instance) are cached.
      */
     class RepositoryMethodsHandler implements InvocationHandler, Serializable {
 
@@ -226,7 +227,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
          * Main method that process script repository methods invocations.
          * On the first stage it checks if the method is scripted by checking annotation
          * (either ScriptMethod or pre-configured one) presence. If the method is not scripted, its invocation
-         * is delegated to an Object instance. Otherwise we get script provider, script executor and
+         * is delegated to an Object instance. Otherwise we get script provider, script evaluator and
          * let them do their work.
          *
          * @see InvocationHandler#invoke(Object, Method, Object[])
@@ -243,9 +244,12 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             Long timeout = invocationInfo.getTimeout();
             log.trace("Submitting task for execution, timeout: {} method: {}", timeout, method);
 
+            CompletableFuture<Object> completableFuture = null;
             try {
-                CompletableFuture<Object> completableFuture =
+
+                completableFuture =
                         CompletableFuture.supplyAsync(() -> doInvoke(proxy, method, args, invocationInfo));
+
                 if (timeout > 0) {
                     return completableFuture
                             .get(timeout, TimeUnit.MILLISECONDS);
@@ -254,9 +258,17 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
                             .get();
                 }
             } catch (Throwable ex) {
-                ScriptExecutionException executionException = new ScriptExecutionException("Error during script execution", ex);
+                if (completableFuture != null && !completableFuture.isDone()) {
+                    completableFuture.completeExceptionally(ex);
+
+                    ScriptEvaluator scriptEvaluator = invocationInfo.getEvaluator();
+                    if (scriptEvaluator instanceof CancellableEvaluator) {
+                        ((CancellableEvaluator) scriptEvaluator).cancel();
+                    }
+                }
+                ScriptEvaluationException executionException = new ScriptEvaluationException("Error during script execution", ex);
                 if (shouldWrapResult(invocationInfo)) {
-                    return new ScriptResult<>(null, ExecutionStatus.FAILURE, executionException);
+                    return new ScriptResult<>(null, EvaluationStatus.FAILURE, executionException);
                 }
                 throw executionException;
             }
@@ -283,10 +295,10 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         private Object executeScriptedMethod(ScriptInvocationMetadata invocationInfo, ScriptSource script, Map<String, Object> binds) {
             Object scriptResult;
 
-            scriptResult = invocationInfo.getExecutor().evaluate(script, binds);
+            scriptResult = invocationInfo.getEvaluator().evaluate(script, binds);
 
             if (shouldWrapResult(invocationInfo)) {
-                return new ScriptResult<>(scriptResult, ExecutionStatus.SUCCESS, null);
+                return new ScriptResult<>(scriptResult, EvaluationStatus.SUCCESS, null);
             }
             return scriptResult;
         }
@@ -303,7 +315,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
             {
                 log.trace("Creating invocation info for method {} ", m.getName());
                 AnnotationConfig annotationConfig = getAnnotationConfig(m);
-                log.trace("Script annotation class name: {}, provider: {}, executor: {}",
+                log.trace("Script annotation class name: {}, provider: {}, evaluator: {}",
                         annotationConfig.scriptAnnotation.getName(), annotationConfig.provider, annotationConfig.executor);
                 ScriptProvider provider = ctx.getBean(annotationConfig.provider, ScriptProvider.class);
                 ScriptEvaluator executor = ctx.getBean(annotationConfig.executor, ScriptEvaluator.class);
@@ -333,7 +345,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
         }
 
         /**
-         * Creates method invocation data - annotation and provider and executor names.
+         * Creates method invocation data - annotation and provider and evaluator names.
          *
          * @param method method that should be processed.
          * @return scripted method configuration.

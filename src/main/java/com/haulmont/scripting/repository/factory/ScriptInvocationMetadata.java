@@ -19,16 +19,16 @@ public class ScriptInvocationMetadata {
     private final Method method;
     private final String providerName;
     private final ScriptProvider provider;
-    private final String executorName;
-    private final ScriptEvaluator executor;
+    private final String evaluatorName;
+    private final ScriptEvaluator evaluator;
     private final Long timeout;
 
-    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String executorName, ScriptEvaluator executor, Long timeout) {
+    ScriptInvocationMetadata(Method method, String providerName, ScriptProvider provider, String evaluatorName, ScriptEvaluator evaluator, Long timeout) {
         this.method = method;
         this.providerName = providerName;
         this.provider = provider;
-        this.executorName = executorName;
-        this.executor = executor;
+        this.evaluatorName = evaluatorName;
+        this.evaluator = evaluator;
         this.timeout = timeout;
     }
 
@@ -77,12 +77,12 @@ public class ScriptInvocationMetadata {
         return provider;
     }
 
-    public String getExecutorName() {
-        return executorName;
+    public String getEvaluatorName() {
+        return evaluatorName;
     }
 
-    public ScriptEvaluator getExecutor() {
-        return executor;
+    public ScriptEvaluator getEvaluator() {
+        return evaluator;
     }
 
     public Long getTimeout() {

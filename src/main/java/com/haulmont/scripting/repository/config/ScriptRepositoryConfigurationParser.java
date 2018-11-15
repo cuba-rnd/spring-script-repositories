@@ -75,7 +75,7 @@ public class ScriptRepositoryConfigurationParser implements BeanDefinitionParser
         List<Element> annotConfig = DomUtils.getChildElementsByTagName(annotConfigEl, "annotation-mapping");
         for (Element el : annotConfig) {
             String providerBeanName = el.getAttribute("provider-bean-name");
-            String executorBeanName = el.getAttribute("executor-bean-name");
+            String executorBeanName = el.getAttribute("evaluator-bean-name");
             String description = el.getAttribute("description");
             long timeout = Long.parseLong(el.getAttribute("timeout"));
             Class<? extends Annotation> annotationClass = (Class<? extends Annotation>)Class.forName(el.getAttribute("annotation-class"));

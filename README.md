@@ -101,7 +101,7 @@ public @interface ScriptRepository {
 ```
  
  Annotation to link interface method to a script source code. You need to provide bean names for script provider 
- bean and script executor bean. 
+ bean and script evaluator bean. 
  ```java
 public @interface ScriptMethod {
     String providerBeanName() default "groovyResourceProvider";
@@ -118,14 +118,14 @@ public interface ScriptProvider {
 The implementation should be able to find script source text based on scripted method's signature. As an example, the
 library provides a default implementation ```GroovyScriptFileProvider``` for a provider that reads text files from a source root. 
 
-Interface for script executor:
+Interface for script evaluator:
 ```java
 public interface ScriptExecutor {
     <T> T eval(String script, Map<String, Object> parameters);
 }
 
 ```
-The implementation just uses script text and invokes it using parameters map. There is a default executor implementation 
+The implementation just uses script text and invokes it using parameters map. There is a default evaluator implementation 
 ```GroovyScriptJsrExecutor``` that uses JRE's JSR-223 engine to execute Groovy scripts. 
 
 Since parameters names are important and java compiler erase actual parameter names from ```.class``` file (unless you 
@@ -144,7 +144,7 @@ The library creates dynamic proxies for repository interfaces marked with ```@Sc
 in this repository must be marked with ```@ScriptMethod```. All interfaces marked with ```@ScriptRepository``` annotation
  will be published in Spring's context and can be injected into other spring beans. 
 
-When an interface method is called, the proxy invokes provider to get method script text and then executor to evaluate 
+When an interface method is called, the proxy invokes provider to get method script text and then evaluator to evaluate 
 the result.
 
 ## Configuration 
@@ -152,7 +152,7 @@ the result.
 In the project itself you can use two configuration options: annotations and XML. 
 
 ### Annotations configuration
-If you plan to use your own implementation for script provider and/or script executor (e.g. for JavaScript), you can specify 
+If you plan to use your own implementation for script provider and/or script evaluator (e.g. for JavaScript), you can specify 
 their spring bean names in ```@ScriptMethod``` annotation:
 ```java
 @ScriptMethod(providerBeanName = "jsFileProvider", executorBeanName = "jsExecutor")
@@ -184,7 +184,7 @@ You can also configure both package scanning and custom annotations using XML in
         <repo:annotations-config>
             <repo:annotation-mapping annotation-class="com.example.JsScript"
                                      provider-bean-name="jsFileProvider"
-                                     executor-bean-name="jsExecutor"/>
+                                     evaluator-bean-name="jsExecutor"/>
         </repo:annotations-config>
     </repo:script-repositories>
 

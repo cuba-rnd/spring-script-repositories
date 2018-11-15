@@ -3,8 +3,8 @@ package com.haulmont.scripting.core.test.timeout;
 import com.haulmont.scripting.repository.GroovyScript;
 import com.haulmont.scripting.repository.ScriptParam;
 import com.haulmont.scripting.repository.ScriptRepository;
-import com.haulmont.scripting.repository.executor.ExecutionStatus;
-import com.haulmont.scripting.repository.executor.ScriptResult;
+import com.haulmont.scripting.repository.evaluator.EvaluationStatus;
+import com.haulmont.scripting.repository.evaluator.ScriptResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public interface TimeoutTestScriptRepository {
         try {
             log.info("Will sleep again for {} ms", timeInMillis);
             Thread.sleep(timeInMillis);
-            return new ScriptResult<>(SUCCESS, ExecutionStatus.SUCCESS, null);
+            return new ScriptResult<>(SUCCESS, EvaluationStatus.SUCCESS, null);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

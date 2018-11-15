@@ -21,7 +21,7 @@
                 <xsd:complexType>
                     <xsd:attribute name="annotation-class" type="xsd:string"/>
                     <xsd:attribute name="provider-bean-name" type="xsd:string" default="groovyResourceProvider"/>
-                    <xsd:attribute name="executor-bean-name" type="xsd:string" default="groovyJsrEvaluator"/>
+                    <xsd:attribute name="evaluator-bean-name" type="xsd:string" default="groovyJsrEvaluator"/>
                     <xsd:attribute name="timeout" type="xsd:long" default="-1"/>
                     <xsd:attribute name="description" type="xsd:string" default=""/>
                 </xsd:complexType>

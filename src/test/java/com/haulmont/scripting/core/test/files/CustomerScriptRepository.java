@@ -28,8 +28,8 @@ public interface CustomerScriptRepository {
     @GroovyScript
     String sayHello();
 
-
     @GroovyScript
     void printData(@ScriptParam("stringToPrint") String stringToPrint);
 
 }
+

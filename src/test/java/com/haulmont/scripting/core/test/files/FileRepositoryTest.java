@@ -2,7 +2,7 @@ package com.haulmont.scripting.core.test.files;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.util.StatusPrinter;
-import com.haulmont.scripting.repository.executor.ScriptExecutionException;
+import com.haulmont.scripting.repository.evaluator.ScriptEvaluationException;
 import com.haulmont.scripting.repository.factory.ScriptInvocationMetadata;
 import com.haulmont.scripting.repository.factory.ScriptRepositoryFactoryBean;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -92,7 +92,7 @@ public class FileRepositoryTest {
     }
 
 
-    @Test(expected = ScriptExecutionException.class)
+    @Test(expected = ScriptEvaluationException.class)
     public void testErrorMethodExecution() {
         String errorLine = repo.getDefaultError();
         fail("Non-default method without an underlying script must throw an error instead of returning result: "+errorLine);

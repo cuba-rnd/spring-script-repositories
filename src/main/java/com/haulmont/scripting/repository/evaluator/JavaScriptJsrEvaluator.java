@@ -1,4 +1,4 @@
-package com.haulmont.scripting.repository.executor;
+package com.haulmont.scripting.repository.evaluator;
 
 import org.springframework.stereotype.Component;
 

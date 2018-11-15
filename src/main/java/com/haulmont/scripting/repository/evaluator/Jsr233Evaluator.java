@@ -1,9 +1,8 @@
-package com.haulmont.scripting.repository.executor;
+package com.haulmont.scripting.repository.evaluator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scripting.ScriptCompilationException;
-import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
 
 import javax.script.ScriptEngine;
@@ -18,7 +17,7 @@ import java.util.Map;
 /**
  * Evaluates scripts using JSR-223 javax.script API and bindings.
  */
-public abstract class Jsr233Evaluator implements ScriptEvaluator {
+public abstract class Jsr233Evaluator implements CancellableEvaluator {
 
     private static final Logger log = LoggerFactory.getLogger(Jsr233Evaluator.class);
 
@@ -46,6 +45,11 @@ public abstract class Jsr233Evaluator implements ScriptEvaluator {
         } catch (IOException | ScriptException e) {
             throw new ScriptCompilationException("Error executing script", e);
         }
+    }
+
+    @Override
+    public void cancel() {
+        log.error("Cancelling {}", getClass());
     }
 
     protected abstract String getEngineName();

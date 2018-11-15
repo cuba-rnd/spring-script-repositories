@@ -1,6 +1,6 @@
-package com.haulmont.scripting.repository.executor;
+package com.haulmont.scripting.repository.evaluator;
 
-public enum ExecutionStatus {
+public enum EvaluationStatus {
     SUCCESS(true),
     FAILURE(false);
 
@@ -10,7 +10,7 @@ public enum ExecutionStatus {
         return successful;
     }
 
-    ExecutionStatus(boolean successful) {
+    EvaluationStatus(boolean successful) {
         this.successful = successful;
     }
 }

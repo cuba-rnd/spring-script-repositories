@@ -3,7 +3,7 @@ package com.haulmont.scripting.core.test.mixed;
 import com.haulmont.scripting.core.test.files.Customer;
 import com.haulmont.scripting.repository.ScriptParam;
 import com.haulmont.scripting.repository.ScriptRepository;
-import com.haulmont.scripting.repository.executor.ScriptResult;
+import com.haulmont.scripting.repository.evaluator.ScriptResult;
 
 import java.util.Date;
 import java.util.UUID;

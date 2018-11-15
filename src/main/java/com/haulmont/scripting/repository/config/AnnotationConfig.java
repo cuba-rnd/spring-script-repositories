@@ -25,7 +25,7 @@ public class AnnotationConfig {
         return "AnnotationConfig{" +
                 "scriptAnnotation=" + scriptAnnotation +
                 ", provider='" + provider + '\'' +
-                ", executor='" + executor + '\'' +
+                ", evaluator='" + executor + '\'' +
                 ", timeout=" + timeout +
                 ", description='" + description + '\'' +
                 '}';
