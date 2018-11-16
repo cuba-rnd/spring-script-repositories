@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import static org.junit.Assert.fail;
+
 @ContextConfiguration(locations = {"classpath:com/haulmont/scripting/core/test/database/db-test-spring.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class DatabaseRepositoryTest {
@@ -53,6 +55,13 @@ public class DatabaseRepositoryTest {
         BigDecimal taxAmount = taxService.calculateTaxAmount(BigDecimal.TEN);
         log.info("Tax amount is: {}", taxAmount);
         Assert.assertTrue(taxAmount.compareTo(BigDecimal.valueOf(1.4)) < 0);
+    }
+
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testConfigError() {
+        taxService.calculateVat(BigDecimal.TEN);
+        fail("Annotations not mapped in XML should not be handled");
     }
 
 }

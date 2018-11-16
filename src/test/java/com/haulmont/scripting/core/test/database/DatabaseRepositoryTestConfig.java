@@ -48,5 +48,8 @@ public class DatabaseRepositoryTestConfig {
             return taxCalculator.calculateTax(sum).getValue();
         }
 
+        public BigDecimal calculateVat(BigDecimal sum) {
+            return taxCalculator.calculateVat(sum);
+        }
     }
 }

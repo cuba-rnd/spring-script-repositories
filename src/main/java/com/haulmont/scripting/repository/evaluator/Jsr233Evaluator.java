@@ -13,7 +13,6 @@ import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Random;
 
 
 /**
@@ -24,8 +23,6 @@ public abstract class Jsr233Evaluator implements ScriptEvaluator {
     private static final Logger log = LoggerFactory.getLogger(Jsr233Evaluator.class);
 
     private final ScriptEngineManager manager = new ScriptEngineManager();
-
-    private int sessionId;
 
     @Override
     public Object evaluate(ScriptSource script) throws ScriptCompilationException {
@@ -38,8 +35,6 @@ public abstract class Jsr233Evaluator implements ScriptEvaluator {
     }
 
     private Object eval(ScriptSource script, Map<String, Object> parameters) {
-        sessionId = new Random().nextInt();
-        log.info("Session ID: {}", sessionId);
         String engineName = getEngineName();
         ScriptEngine scriptEngine = manager.getEngineByName(engineName);
         log.trace("Script bindings: {}", parameters);
