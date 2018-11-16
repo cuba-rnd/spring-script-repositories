@@ -28,7 +28,7 @@ public class GroovyScriptDbProvider implements ScriptProvider {
     private JDBCDataSource dataSource;
 
     private String getScriptTextbyName(String name) throws SQLException {
-        String result = "";
+        String result = null;
         try (Connection conn = dataSource.getConnection();
              PreparedStatement st = conn.prepareStatement("select source_text from persistent_script where name = ?")){
             st.setString(1, name);
@@ -44,9 +44,7 @@ public class GroovyScriptDbProvider implements ScriptProvider {
 
     @Override
     public ScriptSource getScript(Method method) {
-        Class<?> scriptRepositoryClass = method.getDeclaringClass();
-        String methodName = method.getName();
-        String scriptName = scriptRepositoryClass.getSimpleName() + "." + methodName;
+        String scriptName = getScriptName(method);
         String script = null;
         try {
             script = getScriptTextbyName(scriptName);
@@ -57,4 +55,11 @@ public class GroovyScriptDbProvider implements ScriptProvider {
             throw new ScriptNotFoundException(e);
         }
     }
+
+    private String getScriptName(Method method) {
+        Class<?> scriptRepositoryClass = method.getDeclaringClass();
+        String methodName = method.getName();
+        return scriptRepositoryClass.getSimpleName() + "." + methodName;
+    }
+
 }

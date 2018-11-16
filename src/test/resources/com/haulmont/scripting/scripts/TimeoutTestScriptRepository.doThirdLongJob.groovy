@@ -1,4 +1,8 @@
 package com.haulmont.scripting.scripts
 
-println("Sleeping for $timeMillis ms")
-Thread.sleep(timeMillis);
+try {
+    println("Sleeping for $timeMillis ms")
+    Thread.sleep(Long.MAX_VALUE);
+} finally {
+    println("Finally block")
+}

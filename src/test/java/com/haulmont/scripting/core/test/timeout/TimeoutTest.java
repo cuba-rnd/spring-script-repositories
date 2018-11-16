@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.concurrent.Executors;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,7 +45,17 @@ public class TimeoutTest {
 
     @Test(expected = ScriptEvaluationException.class) //Timeout 1_000L
     public void runLongMethodComposedWithTimeout() {
-        testScriptRepository.doThirdLongJob(10_000L);
+        try {
+            Executors.newSingleThreadExecutor().submit(() -> testScriptRepository.doThirdLongJob(5_000L));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            Executors.newSingleThreadExecutor().submit(() -> testScriptRepository.doThirdLongJob(5_000L));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        testScriptRepository.doThirdLongJob(5_000L);
         fail("Long-running methods must throw exception if timeout is set");
     }
 
