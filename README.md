@@ -31,10 +31,10 @@ To start working with the script repositories, you need to do the following:
     @ScriptRepository
     public interface CustomerScriptRepository {
     
-        @ScriptMethod
+        @GroovyScript
         String renameCustomer(@ScriptParam("customerId") UUID customerId, @ScriptParam("newName") String newName);
     
-        @ScriptMethod
+        @GroovyScript
         Customer createCustomer(@ScriptParam("name") String name, @ScriptParam("birthDate") Date birthDate);
     }
     ```
@@ -86,7 +86,7 @@ application configuration and specify path list where your repository interfaces
 
     ```     
 So it should be pretty easy to get started with the library. 
-By default, it supports groovy scripts, but it is quite easy to add any scripting language to it. Below is the 
+By default, it supports Groovy and JavaScript, but it is quite easy to add any scripting language to it. Below is the 
 explanation of the library's internals and configuration.  
 
 ## Internals
@@ -105,28 +105,29 @@ public @interface ScriptRepository {
  ```java
 public @interface ScriptMethod {
     String providerBeanName() default "groovyResourceProvider";
-    String executorBeanName() default "groovyJsrEvaluator";
+    String evaluatorBeanName() default "groovyJsrEvaluator";
+    long timeout() default -1L;
     String description() default "";
 }
 ```
 Interface for script provider:
 ```java
 public interface ScriptProvider {
-    String getScript(Method method);
+    ScriptSource getScript(Method method);
 }
 ```
 The implementation should be able to find script source text based on scripted method's signature. As an example, the
 library provides a default implementation ```GroovyScriptFileProvider``` for a provider that reads text files from a source root. 
 
-Interface for script evaluator:
+Interface for script evaluator - it's a standard Spring Framework class:
 ```java
-public interface ScriptExecutor {
-    <T> T eval(String script, Map<String, Object> parameters);
+public interface ScriptEvaluator {
+	Object evaluate(ScriptSource script) throws ScriptCompilationException;
+	Object evaluate(ScriptSource script, Map<String, Object> arguments) throws ScriptCompilationException;
 }
-
 ```
 The implementation just uses script text and invokes it using parameters map. There is a default evaluator implementation 
-```GroovyScriptJsrExecutor``` that uses JRE's JSR-223 engine to execute Groovy scripts. 
+```GroovyScriptJsrValuator``` that uses JRE's JSR-223 engine to execute Groovy scripts. 
 
 Since parameters names are important and java compiler erase actual parameter names from ```.class``` file (unless you 
 enable "keep debug information" option during compilation), the library provides annotation for method parameters that 
@@ -141,11 +142,24 @@ You can find examples in test classes. They include custom script provider and c
 
 ## Implementation
 The library creates dynamic proxies for repository interfaces marked with ```@ScriptRepository``` annotation. All methods 
-in this repository must be marked with ```@ScriptMethod```. All interfaces marked with ```@ScriptRepository``` annotation
+in this repository must be marked with ```@ScriptMethod``` (or custom annotation). All interfaces marked with ```@ScriptRepository``` annotation
  will be published in Spring's context and can be injected into other spring beans. 
 
 When an interface method is called, the proxy invokes provider to get method script text and then evaluator to evaluate 
 the result.
+
+### Timeout Support
+You can specify timeout either in ```@ScriptMethod``` annotation or in custom one to be able to stop script execution 
+if needed. It is useful if you deal with resources like files or database connections either in your provider or in an evaluator. 
+If you want to implement such a bean, you need to either:
+1. Publish the bean as a PROTOTYPE
+2. Store a reference to the closeable resource in class member 
+3. Implement ```TimeoutAware``` interface and its ```cancel()``` method where all 
+closeable resources should be closed.
+(see ```com.haulmont.scripting.core.test.database.GroovyScriptDbProvider```) as an example.
+
+Or you can try to use ThreadLocal class members to store a reference to a closeable resource. 
+
 
 ## Configuration 
 
@@ -155,12 +169,12 @@ In the project itself you can use two configuration options: annotations and XML
 If you plan to use your own implementation for script provider and/or script evaluator (e.g. for JavaScript), you can specify 
 their spring bean names in ```@ScriptMethod``` annotation:
 ```java
-@ScriptMethod(providerBeanName = "jsFileProvider", executorBeanName = "jsExecutor")
+@ScriptMethod(providerBeanName = "jsFileProvider", evaluatorBeanName = "jsExecutor")
 ```
 To avoid copying and pasting this code across the project you can create your own annotation and use it in your project:
 ```java
 @Target(ElementType.METHOD)
-@ScriptMethod(providerBeanName = "jsFileProvider", executorBeanName = "jsExecutor")
+@ScriptMethod(providerBeanName = "jsFileProvider", evaluatorBeanName = "jsExecutor")
 public @interface JsScript {
 }
 ``` 

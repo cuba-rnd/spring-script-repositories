@@ -12,6 +12,13 @@ public interface TestTaxCalculator {
     @DbGroovyScript
     ScriptResult<BigDecimal> calculateTax(@ScriptParam("amount") BigDecimal amount);
 
-    @FakeScriptAnnotation
+    @WrongScriptAnnotation
     BigDecimal calculateVat(@ScriptParam("amount") BigDecimal amount);
+
+    @DbGroovyScript
+    String notImplementedMethod();
+
+    @DbGroovyScript (timeout = 500L)
+    String timeoutError();
+
 }

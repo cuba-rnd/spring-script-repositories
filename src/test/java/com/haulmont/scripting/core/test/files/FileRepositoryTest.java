@@ -49,10 +49,6 @@ public class FileRepositoryTest {
         StatusPrinter.print(lc);
     }
 
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
     public void testRunSimpleScript() {
         UUID customerId = UUID.randomUUID();

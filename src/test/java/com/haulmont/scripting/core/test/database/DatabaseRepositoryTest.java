@@ -1,5 +1,6 @@
 package com.haulmont.scripting.core.test.database;
 
+import com.haulmont.scripting.repository.evaluator.ScriptEvaluationException;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.junit.After;
 import org.junit.Assert;
@@ -54,7 +55,7 @@ public class DatabaseRepositoryTest {
     public void testTaxCalculation () {
         BigDecimal taxAmount = taxService.calculateTaxAmount(BigDecimal.TEN);
         log.info("Tax amount is: {}", taxAmount);
-        Assert.assertTrue(taxAmount.compareTo(BigDecimal.valueOf(1.4)) < 0);
+        Assert.assertTrue(BigDecimal.valueOf(1.4).compareTo(taxAmount) > 0);
     }
 
 
@@ -62,6 +63,18 @@ public class DatabaseRepositoryTest {
     public void testConfigError() {
         taxService.calculateVat(BigDecimal.TEN);
         fail("Annotations not mapped in XML should not be handled");
+    }
+
+    @Test (expected = ScriptEvaluationException.class)
+    public void testNotImplementedError() {
+        taxService.runNotImplementedMethod();
+        fail("When running not implemented method it should throw an error");
+    }
+
+    @Test (expected = ScriptEvaluationException.class)
+    public void testDbTimeout() {
+        taxService.runTimeoutError();
+        fail("The method should fail due to timeout");
     }
 
 }

@@ -1,5 +1,7 @@
 package com.haulmont.scripting.core.test.database;
 
+import com.haulmont.scripting.repository.evaluator.EvaluationStatus;
+import com.haulmont.scripting.repository.evaluator.ScriptResult;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,11 +47,25 @@ public class DatabaseRepositoryTestConfig {
         private TestTaxCalculator taxCalculator;
 
         public BigDecimal calculateTaxAmount(BigDecimal sum){
-            return taxCalculator.calculateTax(sum).getValue();
+            ScriptResult<BigDecimal> tax = taxCalculator.calculateTax(sum);
+            if (tax.getStatus() != EvaluationStatus.FAILURE) {
+                return tax.getValue();
+            } else {
+                throw new RuntimeException(tax.getError());
+            }
         }
 
         public BigDecimal calculateVat(BigDecimal sum) {
             return taxCalculator.calculateVat(sum);
         }
+
+        public String runNotImplementedMethod() {
+            return  taxCalculator.notImplementedMethod();
+        }
+
+        public String runTimeoutError() {
+            return  taxCalculator.timeoutError();
+        }
+
     }
 }

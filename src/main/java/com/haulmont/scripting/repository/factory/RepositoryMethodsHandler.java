@@ -104,8 +104,7 @@ class RepositoryMethodsHandler implements InvocationHandler, Serializable {
             }
         } catch (Throwable ex) {
             log.error("Error during script evaluation", ex);
-            if (scriptExecutionChain != null && !scriptExecutionChain.isDone()) {
-                scriptExecutionChain.completeExceptionally(ex);
+            if (scriptExecutionChain != null && scriptExecutionChain.isCompletedExceptionally()) {
                 cancelExecution(invocationInfo, provider, evaluator);
             }
             if (shouldWrapResult(method)) {
@@ -118,11 +117,11 @@ class RepositoryMethodsHandler implements InvocationHandler, Serializable {
     }
 
     private void cancelExecution(AnnotationConfig invocationInfo, ScriptProvider provider, ScriptEvaluator evaluator) {
-        if (ctx.isPrototype(invocationInfo.provider) && provider instanceof TimeoutAware) {
+        if (provider instanceof TimeoutAware) {
             log.trace("Cancelling provider {} ", invocationInfo.provider);
             ((TimeoutAware)provider).cancel();
         }
-        if (ctx.isPrototype(invocationInfo.evaluator) && evaluator instanceof TimeoutAware) {
+        if (evaluator instanceof TimeoutAware) {
             log.trace("Cancelling evaluator {} ", invocationInfo.provider);
             ((TimeoutAware)evaluator).cancel();
         }
@@ -250,7 +249,8 @@ class RepositoryMethodsHandler implements InvocationHandler, Serializable {
     }
 
     private boolean shouldWrapResult(Method method) {
-        return ScriptResult.class.isAssignableFrom(method.getReturnType());
+        Class<?> returnType = method.getReturnType();
+        return ScriptResult.class.isAssignableFrom(returnType);
     }
 
 
