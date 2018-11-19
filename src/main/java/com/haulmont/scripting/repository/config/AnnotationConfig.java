@@ -2,6 +2,7 @@ package com.haulmont.scripting.repository.config;
 
 import com.haulmont.scripting.repository.ScriptParam;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -13,7 +14,9 @@ import java.util.function.Function;
 /**
  * Struct like class to hold scripted method data taken from annotation.
  */
-public class AnnotationConfig {
+@SuppressWarnings("serial")
+public class AnnotationConfig implements Serializable {
+
     public final Class<? extends Annotation> scriptAnnotation;
     public final String provider;
     public final String evaluator;

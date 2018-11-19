@@ -168,7 +168,7 @@ public class ScriptRepositoryFactoryBean implements BeanDefinitionRegistryPostPr
      *
      * @see ClassPathScanningCandidateComponentProvider
      */
-    class ScriptRepositoryCandidateProvider extends ClassPathScanningCandidateComponentProvider {
+    static class ScriptRepositoryCandidateProvider extends ClassPathScanningCandidateComponentProvider {
 
         ScriptRepositoryCandidateProvider() {
             super(false);

@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
  * repository interface (equals, hashcode, etc.) will be redirected to Object class instance created within the class.
  * Scripted method invocation configuration (method, provider bean instance and evaluator bean instance) are cached.
  */
+@SuppressWarnings("serial")
 class RepositoryMethodsHandler implements InvocationHandler, Serializable {
 
     private final Logger log = LoggerFactory.getLogger(RepositoryMethodsHandler.class);
@@ -43,11 +44,12 @@ class RepositoryMethodsHandler implements InvocationHandler, Serializable {
     private final Object defaultDelegate = new Object();
 
     private final Class<?> repositoryClass;
+
     private final Map<Class<? extends Annotation>, AnnotationConfig> customAnnotationsConfig;
 
     private final ApplicationContext ctx;
 
-    private Map<Method, AnnotationConfig> methodScriptInvocationMetadata = new ConcurrentHashMap<>(); //global invocation cache
+    private Map<Method, AnnotationConfig> methodScriptInvocationMetadata = new ConcurrentHashMap<>(); //local invocation metadata cache
 
 
     RepositoryMethodsHandler(Class<?> repositoryClass, ApplicationContext ctx, Map<Class<? extends Annotation>, AnnotationConfig> customAnnotationsConfig) {
@@ -101,15 +103,17 @@ class RepositoryMethodsHandler implements InvocationHandler, Serializable {
                 return scriptExecutionChain.get();
             }
         } catch (Throwable ex) {
+            log.error("Error during script evaluation", ex);
             if (scriptExecutionChain != null && !scriptExecutionChain.isDone()) {
                 scriptExecutionChain.completeExceptionally(ex);
                 cancelExecution(invocationInfo, provider, evaluator);
             }
-            ScriptEvaluationException evaluationException = new ScriptEvaluationException("Error during script execution", ex);
             if (shouldWrapResult(method)) {
-                return new ScriptResult<>(null, EvaluationStatus.FAILURE, evaluationException);
-            }
-            throw evaluationException;
+                return new ScriptResult<>(null, EvaluationStatus.FAILURE, ex);
+            } else
+                //Wrapping into RuntimeException to avoid confusing UndeclaredThrowableException throw
+                throw new ScriptEvaluationException(
+                        String.format("Error during script evaluation: %s", ex.getClass().getSimpleName()), ex);
         }
     }
 

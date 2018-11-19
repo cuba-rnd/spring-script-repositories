@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @ContextConfiguration(locations = {"classpath:com/haulmont/scripting/core/test/timeout/timeout-test-spring.xml"})
@@ -39,22 +38,12 @@ public class TimeoutTest {
     public void runLongJobComposedTimeout() {
         ScriptResult<String> result = testScriptRepository.doAnotherLongJob(10_000L);
         assertEquals(EvaluationStatus.FAILURE, result.getStatus());
-        assertEquals(ScriptEvaluationException.class, result.getError().getClass());
+        assertEquals(TimeoutException.class, result.getError().getClass());
     }
 
 
     @Test(expected = ScriptEvaluationException.class) //Timeout 1_000L
     public void runLongMethodComposedWithTimeout() {
-        try {
-            Executors.newSingleThreadExecutor().submit(() -> testScriptRepository.doThirdLongJob(5_000L));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            Executors.newSingleThreadExecutor().submit(() -> testScriptRepository.doThirdLongJob(5_000L));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         testScriptRepository.doThirdLongJob(5_000L);
         fail("Long-running methods must throw exception if timeout is set");
     }
