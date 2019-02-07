@@ -31,7 +31,7 @@ To start working with the script repositories, you need to do the following:
     
     dependencies {
         ...
-    	compile 'com.haulmont.scripting:spring-script-repositories:0.1'
+    	compile 'com.haulmont.scripting:spring-script-repositories:0.1.1'
     }
     ```
     Please note that the library's jar file should be placed near application jar files. 
