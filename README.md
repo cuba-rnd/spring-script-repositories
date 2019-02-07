@@ -18,9 +18,21 @@ type of the script evaluation result.
 ## Usage
 To start working with the script repositories, you need to do the following:
 
-1. Specify library dependency in your project build file
+1. Specify repository for library and add it as a dependency in your project build file
     ```groovy
-    compile('com.haulmont.scripting:spring-script-repositories:0.1-SNAPSHOT')
+    repositories {
+        ...
+        maven {
+            url "https://cuba-platform.bintray.com/labs"
+        }
+    }
+
+    ...
+    
+    dependencies {
+        ...
+    	compile 'com.haulmont.scripting:spring-script-repositories:0.1'
+    }
     ```
     Please note that the library's jar file should be placed near application jar files. 
     E.g. if you use tomcat, please put this file to deployed application's WEB-INF/lib folder not to tomcat shared libs. 
