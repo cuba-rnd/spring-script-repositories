@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.haulmont.scripting'
-version = '0.1-SNAPSHOT'
+version = '0.1.1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -73,7 +73,8 @@ bintray {
     user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
 
-    configurations = ['archives']
+    //use maven publication
+    publications = ['maven']
 
     // make files public ?
     publish = true
@@ -84,15 +85,12 @@ bintray {
     pkg {
         repo = 'labs'           // your repository name
         name = 'spring-script-repositories'  // package name - it will be created upon upload
-
-        // organization name, if your repository is created inside an organization.
-        // remove this parameter if you don't have an organization
         userOrg = 'cuba-platform'
-
+        licenses = ["Apache-2.0"]
         websiteUrl = 'https://github.com/cuba-rnd/spring-script-repositories'
         issueTrackerUrl = 'https://github.com/cuba-rnd/spring-script-repositories/issues'
         vcsUrl = 'https://github.com/cuba-rnd/spring-script-repositories.git' // Mandatory for Open Source projects
-        licenses = ["Apache-2.0"]
         labels = ['spring', 'scripting', 'opensource']
+        publicDownloadNumbers = true
     }
 }
